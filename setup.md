@@ -70,7 +70,7 @@ The frontend is a lightweight, high-fidelity client. You do not need to compile 
    # From the project root, start a simple HTTP server (Python 3)
    python -m http.server 8000
    ```
-3. Open `http://localhost:8000/frontend/` in your browser.
+3. Open `localhost:8081` in your browser.
 
 ---
 
