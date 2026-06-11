@@ -67,12 +67,14 @@
                 <div class="report-form-card glass-card">
                     <form id="emergency-form">
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label" for="reporter-name">Your
-                                    Name</label><input type="text" id="reporter-name" class="form-input"
-                                    placeholder="Full name" required></div>
-                            <div class="form-group"><label class="form-label" for="reporter-contact">Contact
-                                    Number</label><input type="tel" id="reporter-contact" class="form-input"
-                                    placeholder="+1-555-0000" required></div>
+                            <div class="form-group">
+                                <label class="form-label" for="reporter-name">Your Name (Optional)</label>
+                                <input type="text" id="reporter-name" class="form-input" placeholder="Full name (optional)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="reporter-contact">Contact Number (Optional)</label>
+                                <input type="tel" id="reporter-contact" class="form-input" placeholder="e.g. +1-555-0000 (optional)">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="disaster-type">Disaster Type</label>
@@ -109,23 +111,55 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group"><label class="form-label" for="location-address">Location /
-                                Address</label><input type="text" id="location-address" class="form-input"
-                                placeholder="Street address or landmark" required></div>
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label class="form-label" for="location-address" style="margin-bottom: 0;">Location / Address</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-search-address" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                        🔍 Find on Map
+                                    </button>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-detect-location" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                        📍 Locate Me
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="text" id="location-address" class="form-input" placeholder="Street address or landmark" required>
+                        </div>
                         <div class="form-row">
                             <div class="form-group"><label class="form-label" for="location-lat">Latitude (optional)</label><input type="number" id="location-lat" class="form-input" placeholder="e.g. 23.8103" step="any"></div>
                             <div class="form-group"><label class="form-label" for="location-lng">Longitude (optional)</label><input type="number" id="location-lng" class="form-input" placeholder="e.g. 90.4125" step="any"></div>
                         </div>
                         <!-- Animated Map Container -->
                         <div id="map" style="height: 300px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.15); display: none; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);"></div>
-                        <div style="text-align: right; margin-bottom: 16px;"><button type="button"
-                                class="btn btn-ghost btn-sm" id="btn-detect-location">📍 Detect My Location</button>
+                        
+                        <!-- Voice Recorder Section -->
+                        <div class="form-group">
+                            <label class="form-label">Voice Report (Optional)</label>
+                            <div class="voice-recorder-card" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; margin-bottom: 20px;">
+                                <button type="button" class="btn btn-danger btn-sm" id="btn-record-audio" style="min-width: 140px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <span class="record-dot" id="record-dot" style="width: 10px; height: 10px; background: #fff; border-radius: 50%;"></span>
+                                    <div class="soundwave-container" id="soundwave-container" style="display: none;">
+                                        <span class="soundwave-bar"></span>
+                                        <span class="soundwave-bar"></span>
+                                        <span class="soundwave-bar"></span>
+                                        <span class="soundwave-bar"></span>
+                                        <span class="soundwave-bar"></span>
+                                    </div>
+                                    <span id="record-text">Record Voice</span>
+                                </button>
+                                <div id="record-timer" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary); display: none;">00:00</div>
+                                <div id="audio-preview-container" style="display: none; align-items: center; gap: 12px; width: 100%;">
+                                    <audio id="audio-preview" controls style="height: 36px; border-radius: 8px; flex-grow: 1; background: rgba(17,24,39,0.8); border: 1px solid rgba(255,255,255,0.1);"></audio>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-delete-audio" style="color: var(--red);">✕ Delete</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group"><label class="form-label" for="description">Description</label><textarea
-                                id="description" class="form-textarea" rows="5"
-                                placeholder="Describe the emergency situation in detail..." required></textarea></div>
-                        <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;"
-                            id="btn-submit-emergency">🚨 Submit Emergency Report</button>
+
+                        <div class="form-group">
+                            <label class="form-label" for="description">Description (Optional)</label>
+                            <textarea id="description" class="form-textarea" rows="4" placeholder="Describe the emergency situation (optional)..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;" id="btn-submit-emergency">🚨 Submit Emergency Report</button>
                     </form>
                 </div>
             </div>
@@ -170,15 +204,37 @@
             loadFeed();
             
             // Automatically detect location immediately on page load
-            autoDetectLocation();
+            autoDetectLocation(false);
+
+            // Hook up manual locate and search buttons
+            const btnDetect = document.getElementById('btn-detect-location');
+            if (btnDetect) {
+                btnDetect.addEventListener('click', () => {
+                    autoDetectLocation(true);
+                });
+            }
+
+            const btnSearch = document.getElementById('btn-search-address');
+            if (btnSearch) {
+                btnSearch.addEventListener('click', searchAddress);
+            }
+
+            // Hook up coordinate text input changes to update map & reverse geocode
+            const inputLat = document.getElementById('location-lat');
+            const inputLng = document.getElementById('location-lng');
+            if (inputLat && inputLng) {
+                inputLat.addEventListener('change', updateMapFromInputs);
+                inputLng.addEventListener('change', updateMapFromInputs);
+            }
         });
 
         document.querySelectorAll('.severity-option').forEach(opt => { opt.addEventListener('click', () => { document.querySelectorAll('.severity-option').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedSeverity = opt.dataset.severity; }); });
 
-        function autoDetectLocation() {
+        function autoDetectLocation(isManual = false) {
             if (!navigator.geolocation) { 
                 console.warn('Geolocation not supported by this browser.'); 
-                fallbackLocation();
+                if (isManual) toast.error('Geolocation is not supported by your browser.');
+                fallbackLocation(isManual);
                 return; 
             }
             
@@ -188,18 +244,44 @@
                 updateCoordsInput(lat, lng);
                 initMap(lat, lng);
                 reverseGeocode(lat, lng);
+                if (isManual) toast.success('Location updated successfully!');
             }, (err) => {
                 console.warn('Geolocation error or permission denied:', err);
-                fallbackLocation();
+                if (isManual) toast.info('Browser location access denied. Estimating via IP...');
+                fallbackLocation(isManual);
+            }, {
+                enableHighAccuracy: true,
+                timeout: 8000,
+                maximumAge: 0
             });
         }
 
-        function fallbackLocation() {
+        async function fallbackLocation(isManual = false) {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.latitude && data.longitude) {
+                        const lat = data.latitude;
+                        const lng = data.longitude;
+                        updateCoordsInput(lat, lng);
+                        initMap(lat, lng);
+                        reverseGeocode(lat, lng);
+                        if (isManual) toast.success('Estimated location from IP loaded!');
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('IP geolocation failed:', err);
+            }
+            
+            // Hard fallback coordinates (Dhaka, Bangladesh)
             const lat = 23.8103;
             const lng = 90.4125;
             updateCoordsInput(lat, lng);
             initMap(lat, lng);
             reverseGeocode(lat, lng);
+            if (isManual) toast.error('Unable to detect location automatically. Please drag map marker.');
         }
 
         function initMap(lat, lng) {
@@ -216,11 +298,18 @@
                     updateCoordsInput(position.lat, position.lng);
                     reverseGeocode(position.lat, position.lng);
                 });
+
+                // Invalidate size after container is shown to ensure Leaflet renders all tiles perfectly
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
             } else {
                 const newLatLng = new L.LatLng(lat, lng);
                 map.setView(newLatLng, 15);
                 marker.setLatLng(newLatLng);
-                map.invalidateSize();
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
             }
         }
 
@@ -244,9 +333,157 @@
                 console.error('Reverse geocoding error:', err);
             }
         }
+
+        async function searchAddress() {
+            const address = document.getElementById('location-address').value.trim();
+            if (!address) {
+                toast.error('Please enter an address first.');
+                return;
+            }
+            toast.info('Searching address on map...');
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
+                    headers: { 'User-Agent': 'RescueCmd/1.0' }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lng = parseFloat(data[0].lon);
+                        updateCoordsInput(lat, lng);
+                        initMap(lat, lng);
+                        toast.success('Address located successfully!');
+                    } else {
+                        toast.error('Address not found. Please try a different query.');
+                    }
+                } else {
+                    toast.error('Search service not available.');
+                }
+            } catch (err) {
+                console.error('Address search error:', err);
+                toast.error('An error occurred during search.');
+            }
+        }
+
+        function updateMapFromInputs() {
+            const lat = parseFloat(document.getElementById('location-lat').value);
+            const lng = parseFloat(document.getElementById('location-lng').value);
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                initMap(lat, lng);
+                reverseGeocode(lat, lng);
+            }
+        }
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordTimerInterval;
+        let recordSeconds = 0;
+        let audioBase64 = null;
+
+        const btnRecord = document.getElementById('btn-record-audio');
+        const recordDot = document.getElementById('record-dot');
+        const recordText = document.getElementById('record-text');
+        const recordTimer = document.getElementById('record-timer');
+        const previewContainer = document.getElementById('audio-preview-container');
+        const audioPreview = document.getElementById('audio-preview');
+        const btnDeleteAudio = document.getElementById('btn-delete-audio');
+
+        btnRecord.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        });
+
+        btnDeleteAudio.addEventListener('click', () => {
+            audioBase64 = null;
+            audioPreview.src = '';
+            previewContainer.style.display = 'none';
+            btnRecord.style.display = 'flex';
+            recordTimer.style.display = 'none';
+            btnRecord.classList.remove('record-active');
+            recordText.textContent = 'Record Voice';
+            const soundwave = document.getElementById('soundwave-container');
+            if (soundwave) soundwave.style.display = 'none';
+        });
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPreview.src = audioUrl;
+                    
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        audioBase64 = reader.result;
+                    };
+
+                    previewContainer.style.display = 'flex';
+                    btnRecord.style.display = 'none';
+                    recordTimer.style.display = 'none';
+                };
+
+                mediaRecorder.start();
+                btnRecord.classList.add('record-active');
+                recordText.textContent = 'Stop';
+                recordTimer.style.display = 'block';
+                recordSeconds = 0;
+                recordTimer.textContent = '00:00';
+                const soundwave = document.getElementById('soundwave-container');
+                if (soundwave) soundwave.style.display = 'inline-flex';
+                
+                recordTimerInterval = setInterval(() => {
+                    recordSeconds++;
+                    const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+                    const secs = String(recordSeconds % 60).padStart(2, '0');
+                    recordTimer.textContent = `${mins}:${secs}`;
+                    
+                    if (recordSeconds >= 30) {
+                        stopRecording();
+                    }
+                }, 1000);
+
+            } catch (err) {
+                console.error('Microphone access denied or error:', err);
+                toast.error('Could not access microphone.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                clearInterval(recordTimerInterval);
+                const soundwave = document.getElementById('soundwave-container');
+                if (soundwave) soundwave.style.display = 'none';
+            }
+        }
+
         document.getElementById('emergency-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = { reporterName: document.getElementById('reporter-name').value.trim(), reporterContact: document.getElementById('reporter-contact').value.trim(), disasterType: document.getElementById('disaster-type').value, severity: selectedSeverity, description: document.getElementById('description').value.trim(), location: { address: document.getElementById('location-address').value.trim(), lat: parseFloat(document.getElementById('location-lat').value) || 0, lng: parseFloat(document.getElementById('location-lng').value) || 0 } };
+            const data = { 
+                reporterName: document.getElementById('reporter-name').value.trim() || 'Anonymous', 
+                reporterContact: document.getElementById('reporter-contact').value.trim() || 'N/A', 
+                disasterType: document.getElementById('disaster-type').value, 
+                severity: selectedSeverity, 
+                description: document.getElementById('description').value.trim() || 'Voice report submitted.', 
+                audioData: audioBase64,
+                location: { 
+                    address: document.getElementById('location-address').value.trim(), 
+                    lat: parseFloat(document.getElementById('location-lat').value) || 0, 
+                    lng: parseFloat(document.getElementById('location-lng').value) || 0 
+                } 
+            };
             try {
                 const result = await api.emergencies.report(data);
                 toast.success('Emergency reported!');
@@ -256,17 +493,64 @@
                 loadFeed();
             } catch (err) { toast.error('Failed to submit report.'); }
         });
-        function resetForm() { document.getElementById('report-section').style.display = 'block'; document.getElementById('success-screen').classList.remove('show'); document.getElementById('emergency-form').reset(); selectedSeverity = 'HIGH'; document.querySelectorAll('.severity-option').forEach(o => o.classList.remove('active')); document.querySelector('[data-severity="HIGH"]').classList.add('active'); }
+
+        function resetForm() { 
+            document.getElementById('report-section').style.display = 'block'; 
+            document.getElementById('success-screen').classList.remove('show'); 
+            document.getElementById('emergency-form').reset(); 
+            selectedSeverity = 'HIGH'; 
+            document.querySelectorAll('.severity-option').forEach(o => o.classList.remove('active')); 
+            document.querySelector('[data-severity="HIGH"]').classList.add('active'); 
+            
+            // Reset recorder
+            audioBase64 = null;
+            if (audioPreview) audioPreview.src = '';
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (btnRecord) {
+                btnRecord.style.display = 'flex';
+                btnRecord.classList.remove('record-active');
+            }
+            if (recordTimer) recordTimer.style.display = 'none';
+            if (recordText) recordText.textContent = 'Record Voice';
+            const soundwave = document.getElementById('soundwave-container');
+            if (soundwave) soundwave.style.display = 'none';
+        }
+
         async function loadFeed() {
             const c = document.getElementById('emergency-feed');
             try {
                 const emergencies = await api.emergencies.getActive();
                 if (!emergencies.length) { c.innerHTML = '<div class="empty-state"><div class="empty-icon">🏔️</div><h3>No Active Emergencies</h3><p>All clear!</p></div>'; return; }
-                c.innerHTML = emergencies.map(e => `<div class="emergency-card glass-card severity-${(e.severity || '').toLowerCase()}"><div class="emergency-card-header"><div class="disaster-type">${utils.disasterIcon(e.disasterType)} ${(e.disasterType || '').replace('_', ' ')}</div><div class="emergency-card-badges"><span class="badge ${utils.severityClass(e.severity)}"><span class="badge-dot"></span> ${e.severity}</span><span class="badge ${utils.statusClass(e.status)}"><span class="badge-dot"></span> ${utils.statusText(e.status)}</span></div></div><div class="emergency-card-body"><div class="description">${e.description || ''}</div><div class="emergency-card-meta"><div class="meta-item"><span class="icon">📍</span><span class="value">${e.location ? e.location.address : 'Unknown'}</span></div><div class="meta-item"><span class="icon">👤</span><span class="value">${e.reporterName || 'Anonymous'}</span></div><div class="meta-item"><span class="icon">🕐</span><span class="value timestamp">${utils.formatDateTime(e.timestamp)}</span></div>${e.assignedTeamName ? `<div class="meta-item"><span class="icon">🚒</span><span class="value">${e.assignedTeamName}</span></div>` : ''}</div></div></div>`).join('');
-            } catch (err) { c.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><h3>Unable to Load</h3><p>Make sure the backend is running on port 8080.</p></div>'; }
+                c.innerHTML = emergencies.map(e => `
+                    <div class="emergency-card glass-card severity-${(e.severity || '').toLowerCase()}">
+                        <div class="emergency-card-header">
+                            <div class="disaster-type">${utils.disasterIcon(e.disasterType)} ${(e.disasterType || '').replace('_', ' ')}</div>
+                            <div class="emergency-card-badges">
+                                <span class="badge ${utils.severityClass(e.severity)}"><span class="badge-dot"></span> ${e.severity}</span>
+                                <span class="badge ${utils.statusClass(e.status)}"><span class="badge-dot"></span> ${utils.statusText(e.status)}</span>
+                            </div>
+                        </div>
+                        <div class="emergency-card-body">
+                            <div class="description">
+                                ${e.description || ''}
+                                ${e.audioData ? `
+                                <div class="audio-container" style="margin-top: 12px; display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">📢 Voice Message:</span>
+                                    <audio src="${e.audioData}" controls style="width: 100%; height: 32px; border-radius: 6px; outline: none;"></audio>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div class="emergency-card-meta">
+                                <div class="meta-item"><span class="icon">📍</span><span class="value">${e.location ? e.location.address : 'Unknown'}</span></div>
+                                <div class="meta-item"><span class="icon">👤</span><span class="value">${e.reporterName || 'Anonymous'}</span></div>
+                                <div class="meta-item"><span class="icon">🕐</span><span class="value timestamp">${utils.formatDateTime(e.timestamp)}</span></div>
+                                ${e.assignedTeamName ? `<div class="meta-item"><span class="icon">🚒</span><span class="value">${e.assignedTeamName}</span></div>` : ''}
+                            </div>
+                        </div>
+                    </div>`).join('');
+            } catch (err) { c.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><h3>Unable to Load</h3><p>Make sure the backend is running.</p></div>'; }
         }
         setInterval(loadFeed, 30000);
     </script>
 </body>
-
 </html>

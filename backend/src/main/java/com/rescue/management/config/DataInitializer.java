@@ -102,6 +102,7 @@ public class DataInitializer implements CommandLineRunner {
                 new Emergency.Location("Riverside District, Sector 7", 23.8103, 90.4125),
                 Emergency.Severity.CRITICAL,
                 "Major flooding in Riverside District. Water level rising rapidly. Multiple families trapped on rooftops. Immediate evacuation needed.",
+                null, // audioData
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(2));
 
@@ -111,6 +112,7 @@ public class DataInitializer implements CommandLineRunner {
                 new Emergency.Location("Industrial Zone B, Building 14", 23.7545, 90.3907),
                 Emergency.Severity.HIGH,
                 "Large fire in industrial warehouse. Thick black smoke visible. Workers may still be inside. Fire spreading to adjacent buildings.",
+                null, // audioData
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusHours(1), LocalDateTime.now().minusHours(1));
 
@@ -120,6 +122,7 @@ public class DataInitializer implements CommandLineRunner {
                 new Emergency.Location("Downtown Core, Block 12", 23.7900, 90.4050),
                 Emergency.Severity.HIGH,
                 "Building partially collapsed after tremor. At least 10 people believed trapped. Structural damage in surrounding buildings.",
+                null, // audioData
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusMinutes(45), LocalDateTime.now().minusMinutes(45));
 
@@ -129,6 +132,7 @@ public class DataInitializer implements CommandLineRunner {
                 new Emergency.Location("Hill Road, Northern Heights", 23.8250, 90.4300),
                 Emergency.Severity.MEDIUM,
                 "Landslide blocking main road. Two vehicles partially buried. No confirmed injuries yet but road is completely impassable.",
+                null, // audioData
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusMinutes(30), LocalDateTime.now().minusMinutes(30));
 

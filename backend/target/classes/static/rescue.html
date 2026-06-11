@@ -7,6 +7,31 @@
     <title>Rescue Team Portal — Rescue Management System</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚒</text></svg>">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Dark Mode Map Integration */
+        .leaflet-tile {
+            filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+        }
+        .leaflet-container {
+            background: #030712 !important;
+        }
+        .leaflet-bar a {
+            background-color: rgba(17, 24, 39, 0.8) !important;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-bar a:hover {
+            background-color: rgba(31, 41, 55, 0.9) !important;
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: rgba(17, 24, 39, 0.9) !important;
+            color: var(--text-primary) !important;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
 </head>
 <body>
 
@@ -85,10 +110,15 @@
         </div>
     </div>
 
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>
     <script>
         let currentUser = null;
         let currentTeam = null;
+        let activeMissionMap = null;
+        let activeMissionMarker = null;
+        let stopwatchInterval = null;
 
         // ── Init ──
         document.addEventListener('DOMContentLoaded', async () => {
@@ -132,6 +162,9 @@
 
         // ── Load Missions ──
         async function loadMissions() {
+            activeMissionMap = null;
+            activeMissionMarker = null;
+
             if (!currentUser.teamId) {
                 document.getElementById('active-mission-container').innerHTML = `
                     <div class="empty-state">
@@ -153,7 +186,20 @@
 
                 if (active) {
                     container.innerHTML = renderMissionCard(active, true);
+                    initActiveMissionMap(active);
+                    if (active.status === 'IN_PROGRESS') {
+                        startMissionStopwatch(active.updatedAt);
+                    } else {
+                        if (stopwatchInterval) {
+                            clearInterval(stopwatchInterval);
+                            stopwatchInterval = null;
+                        }
+                    }
                 } else {
+                    if (stopwatchInterval) {
+                        clearInterval(stopwatchInterval);
+                        stopwatchInterval = null;
+                    }
                     container.innerHTML = `
                         <div class="glass-card" style="padding: 48px; text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.3;">✅</div>
@@ -189,18 +235,56 @@
             }
         }
 
+        // ── Active Mission Map Initialization ──
+        function initActiveMissionMap(mission) {
+            if (!mission.location || !mission.location.lat || !mission.location.lng) return;
+            
+            setTimeout(() => {
+                const mapContainer = document.getElementById('active-mission-map');
+                if (!mapContainer) return;
+
+                const lat = parseFloat(mission.location.lat);
+                const lng = parseFloat(mission.location.lng);
+
+                if (!activeMissionMap) {
+                    activeMissionMap = L.map('active-mission-map').setView([lat, lng], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(activeMissionMap);
+
+                    activeMissionMarker = L.marker([lat, lng]).addTo(activeMissionMap);
+                    
+                    setTimeout(() => {
+                        activeMissionMap.invalidateSize();
+                    }, 100);
+                } else {
+                    const newLatLng = new L.LatLng(lat, lng);
+                    activeMissionMap.setView(newLatLng, 15);
+                    activeMissionMarker.setLatLng(newLatLng);
+                    setTimeout(() => {
+                        activeMissionMap.invalidateSize();
+                    }, 100);
+                }
+            }, 100);
+        }
+
         // ── Render Mission Card ──
         function renderMissionCard(mission, isActive) {
             const progressClass = mission.status === 'COMPLETED' ? 'completed' :
                                   mission.status === 'IN_PROGRESS' ? 'in-progress' : 'pending';
+            const glowClass = (isActive && mission.status === 'IN_PROGRESS') ? 'active-mission-card-glow' : '';
 
             return `
-                <div class="mission-card glass-card" id="mission-${mission.id}">
+                <div class="mission-card glass-card ${glowClass}" id="mission-${mission.id}">
                     ${isActive ? `
                     <div class="mission-status-bar">
                         <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">PROGRESS</span>
                         <div class="status-progress-bar">
                             <div class="fill ${progressClass}"></div>
+                        </div>
+                        <div class="mission-stopwatch" id="stopwatch-container" style="display: none;">
+                            <span class="stopwatch-icon">⏱️</span>
+                            <span class="stopwatch-time" id="mission-elapsed-time">00:00:00</span>
                         </div>
                         <span class="badge ${utils.statusClass(mission.status)}">
                             <span class="badge-dot"></span> ${utils.statusText(mission.status)}
@@ -231,6 +315,11 @@
                         ${mission.description || 'No description provided'}
                     </p>
 
+                    ${isActive && mission.location && mission.location.lat && mission.location.lng ? `
+                    <!-- Active Mission Map Container -->
+                    <div id="active-mission-map" style="height: 250px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin: 16px 0; box-shadow: var(--glass-shadow); z-index: 1;"></div>
+                    ` : ''}
+
                     <div class="mission-detail-grid">
                         <div class="mission-detail">
                             <div class="detail-label">📍 Location</div>
@@ -251,7 +340,7 @@
                     </div>
 
                     ${mission.status !== 'COMPLETED' ? `
-                    <div class="mission-actions" style="margin-top: 16px;">
+                    <div class="mission-actions" style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px;">
                         ${mission.status === 'PENDING' ? `
                             <button class="btn btn-warning" onclick="updateMissionStatus('${mission.id}', 'IN_PROGRESS')">
                                 ▶️ Start Mission
@@ -262,6 +351,11 @@
                                 ✅ Mark Complete
                             </button>
                         ` : ''}
+                        ${mission.location && mission.location.lat && mission.location.lng ? `
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${mission.location.lat},${mission.location.lng}" target="_blank" class="btn btn-ghost" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                                🗺️ Navigate
+                            </a>
+                        ` : ''}
                     </div>
                     ` : `
                     <div style="margin-top: 16px; padding: 12px; background: rgba(34, 197, 94, 0.08); border-radius: 8px; text-align: center;">
@@ -270,6 +364,40 @@
                     `}
                 </div>
             `;
+        }
+
+        function startMissionStopwatch(updatedAt) {
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+                stopwatchInterval = null;
+            }
+
+            const stopwatchContainer = document.getElementById('stopwatch-container');
+            const stopwatchTime = document.getElementById('mission-elapsed-time');
+            if (!stopwatchContainer || !stopwatchTime) return;
+
+            stopwatchContainer.style.display = 'inline-flex';
+
+            const startTime = updatedAt ? new Date(updatedAt).getTime() : new Date().getTime();
+
+            function updateTime() {
+                const now = new Date().getTime();
+                const diff = now - startTime;
+
+                if (diff < 0) {
+                    stopwatchTime.textContent = '00:00:00';
+                    return;
+                }
+
+                const hours = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+
+                stopwatchTime.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+
+            updateTime();
+            stopwatchInterval = setInterval(updateTime, 1000);
         }
 
         // ── Update Mission Status ──

@@ -24,6 +24,7 @@ public class Emergency {
     private Location location;
     private Severity severity;
     private String description;
+    private String audioData; // Base64 audio data or S3 URL
 
     private Status status = Status.PENDING;
     private String assignedTeamId;

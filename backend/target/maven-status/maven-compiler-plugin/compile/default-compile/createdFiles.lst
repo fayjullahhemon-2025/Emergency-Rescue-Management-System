@@ -1,10 +1,12 @@
 com\rescue\management\service\TeamService.class
+com\rescue\management\service\FileStorageService.class
 com\rescue\management\repository\RescueTeamRepository.class
 com\rescue\management\config\CorsConfig.class
 com\rescue\management\controller\TeamController.class
 com\rescue\management\model\User.class
 com\rescue\management\model\Emergency$Location.class
 com\rescue\management\service\UserService.class
+com\rescue\management\config\WebConfig.class
 com\rescue\management\model\Emergency$Status.class
 com\rescue\management\repository\UserRepository.class
 com\rescue\management\model\Emergency$DisasterType.class

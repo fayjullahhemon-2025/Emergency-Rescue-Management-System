@@ -19,8 +19,13 @@ public class EmergencyService {
 
     private final EmergencyRepository emergencyRepository;
     private final RescueTeamRepository rescueTeamRepository;
+    private final FileStorageService fileStorageService;
 
     public Emergency reportEmergency(Emergency emergency) {
+        if (emergency.getAudioData() != null && emergency.getAudioData().startsWith("data:")) {
+            String localUrl = fileStorageService.saveBase64Audio(emergency.getAudioData());
+            emergency.setAudioData(localUrl);
+        }
         emergency.setStatus(Emergency.Status.PENDING);
         emergency.setTimestamp(LocalDateTime.now());
         emergency.setUpdatedAt(LocalDateTime.now());

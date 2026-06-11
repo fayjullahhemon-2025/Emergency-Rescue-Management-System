@@ -7,6 +7,83 @@
     <title>Admin Dashboard — Rescue Management System</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Dark Mode Map Integration */
+        .leaflet-tile {
+            filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
+        }
+        .leaflet-container {
+            background: #030712 !important;
+        }
+        .leaflet-bar a {
+            background-color: rgba(17, 24, 39, 0.8) !important;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-bar a:hover {
+            background-color: rgba(31, 41, 55, 0.9) !important;
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: rgba(17, 24, 39, 0.9) !important;
+            color: var(--text-primary) !important;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Custom map markers */
+        .custom-admin-marker {
+            background: none !important;
+            border: none !important;
+        }
+        .admin-marker-pin {
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            background: var(--blue);
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 50%;
+            top: 50%;
+            margin: -18px 0 0 -18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+            border: 2px solid #fff;
+            transition: transform 0.2s ease-in-out;
+        }
+        .admin-marker-pin .marker-icon {
+            transform: rotate(45deg);
+            font-size: 1.1rem;
+            display: block;
+        }
+        .admin-marker-pin.severity-low {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green-glow);
+        }
+        .admin-marker-pin.severity-medium {
+            background: var(--amber);
+            box-shadow: 0 0 8px var(--amber-glow);
+        }
+        .admin-marker-pin.severity-high {
+            background: var(--orange);
+            box-shadow: 0 0 8px var(--orange-glow);
+        }
+        .admin-marker-pin.severity-critical {
+            background: var(--red);
+            box-shadow: 0 0 15px var(--red-glow);
+            animation: pinPulse 1.5s infinite alternate;
+        }
+        @keyframes pinPulse {
+            0% { transform: rotate(-45deg) scale(1); }
+            100% { transform: rotate(-45deg) scale(1.15); box-shadow: 0 0 25px var(--red-glow); }
+        }
+        .map-popup-card {
+            font-family: var(--font-body);
+            color: var(--text-primary);
+        }
+    </style>
 </head>
 <body>
 
@@ -35,6 +112,10 @@
             <!-- Page Header -->
             <div class="page-header">
                 <h1>🛡️ Command Center</h1>
+                <div class="live-radar-header glass-card">
+                    <span class="radar-pulse"></span>
+                    <span class="radar-status-text">📡 COMMAND COORDINATION — SYSTEM LIVE (REAL-TIME STREAMING)</span>
+                </div>
                 <p>Manage emergencies, dispatch rescue teams, and monitor all operations in real-time.</p>
             </div>
 
@@ -71,6 +152,9 @@
                     <div class="stat-label">Teams Deployed</div>
                 </div>
             </div>
+
+            <!-- Command Center Tracking Map -->
+            <div id="admin-map" style="height: 380px; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); margin-bottom: 24px; box-shadow: var(--glass-shadow); z-index: 1;"></div>
 
             <!-- Tabs -->
             <div class="tabs" id="main-tabs">
@@ -222,6 +306,8 @@
         </div>
     </div>
 
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>
     <script>
         let currentUser = null;
@@ -229,6 +315,8 @@
         let allTeams = [];
         let currentFilter = 'ALL';
         let selectedDispatchEmergencyId = null;
+        let adminMap = null;
+        let markersGroup = null;
 
         // ── Init ──
         document.addEventListener('DOMContentLoaded', () => {
@@ -250,9 +338,99 @@
                     btn.classList.add('active');
                     document.getElementById(`content-${btn.dataset.tab}`).classList.add('active');
 
-                    if (btn.dataset.tab === 'teams') loadTeams();
+                    if (btn.dataset.tab === 'teams') {
+                        loadTeams();
+                        document.getElementById('admin-map').style.display = 'none';
+                    } else {
+                        document.getElementById('admin-map').style.display = 'block';
+                        if (adminMap) {
+                            setTimeout(() => adminMap.invalidateSize(), 100);
+                        }
+                    }
                 });
             });
+        }
+
+        // ── Leaflet Admin Map Functions ──
+        function initAdminMap() {
+            const mapContainer = document.getElementById('admin-map');
+            if (!mapContainer || adminMap) return;
+
+            adminMap = L.map('admin-map').setView([23.8103, 90.4125], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(adminMap);
+            markersGroup = L.layerGroup().addTo(adminMap);
+            
+            setTimeout(() => {
+                adminMap.invalidateSize();
+            }, 100);
+        }
+
+        function updateMapMarkers() {
+            if (!adminMap || !markersGroup) return;
+            markersGroup.clearLayers();
+
+            let hasValidCoords = false;
+            let totalLat = 0;
+            let totalLng = 0;
+            let count = 0;
+
+            const activeEmergencies = allEmergencies.filter(e => e.status !== 'COMPLETED');
+
+            activeEmergencies.forEach(e => {
+                if (e.location && e.location.lat && e.location.lng) {
+                    const lat = parseFloat(e.location.lat);
+                    const lng = parseFloat(e.location.lng);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        totalLat += lat;
+                        totalLng += lng;
+                        count++;
+                        hasValidCoords = true;
+
+                        const severityClass = (e.severity || 'HIGH').toLowerCase();
+                        const statusClass = (e.status || 'PENDING').toLowerCase();
+                        
+                        const customIcon = L.divIcon({
+                            className: 'custom-admin-marker',
+                            html: `<div class="admin-marker-pin severity-${severityClass} status-${statusClass}" title="${e.disasterType}">
+                                     <span class="marker-icon">${utils.disasterIcon(e.disasterType)}</span>
+                                   </div>`,
+                            iconSize: [36, 36],
+                            iconAnchor: [18, 36],
+                            popupAnchor: [0, -32]
+                        });
+
+                        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(markersGroup);
+                        
+                        const popupContent = `
+                            <div class="map-popup-card">
+                                <h4 style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                                    ${utils.disasterIcon(e.disasterType)} ${(e.disasterType || '').replace('_', ' ')}
+                                </h4>
+                                <p style="margin: 0 0 8px 0; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                                    ${e.description ? (e.description.length > 80 ? e.description.substring(0, 80) + '...' : e.description) : 'No description'}
+                                </p>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                    <span class="badge ${utils.severityClass(e.severity)}" style="font-size: 0.65rem; padding: 2px 8px;">${e.severity}</span>
+                                    <span class="badge ${utils.statusClass(e.status)}" style="font-size: 0.65rem; padding: 2px 8px;">${utils.statusText(e.status)}</span>
+                                </div>
+                                <div style="display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
+                                    <button class="btn btn-ghost btn-sm" onclick="viewDetail('${e.id}')" style="padding: 4px 8px; font-size: 0.75rem;">📋 Details</button>
+                                    ${e.status === 'PENDING' ? `
+                                        <button class="btn btn-primary btn-sm" onclick="openDispatchModal('${e.id}')" style="padding: 4px 8px; font-size: 0.75rem;">🎯 Dispatch</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent);
+                    }
+                }
+            });
+
+            if (count > 0) {
+                adminMap.setView([totalLat / count, totalLng / count], 13);
+            }
         }
 
         // ── Filters ──
@@ -298,6 +476,8 @@
             try {
                 allEmergencies = await api.emergencies.getAll();
                 renderEmergencies();
+                initAdminMap();
+                updateMapMarkers();
             } catch (err) {
                 document.getElementById('emergency-list').innerHTML = `
                     <div class="empty-state">
@@ -345,7 +525,15 @@
                         </div>
                     </div>
                     <div class="emergency-card-body">
-                        <div class="description">${e.description || ''}</div>
+                        <div class="description">
+                            ${e.description || ''}
+                            ${e.audioData ? `
+                            <div class="audio-container" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">📢 Voice Message:</span>
+                                <audio src="${e.audioData}" controls style="width: 100%; height: 28px; outline: none;"></audio>
+                            </div>
+                            ` : ''}
+                        </div>
                         <div class="emergency-card-meta">
                             <div class="meta-item">
                                 <span class="icon">📍</span>
@@ -579,6 +767,12 @@
                 </div>
 
                 <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">${e.description || 'No description'}</p>
+                ${e.audioData ? `
+                <div style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">
+                    <p style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em;">📢 Voice Report Message:</p>
+                    <audio src="${e.audioData}" controls style="width: 100%; height: 36px; outline: none;"></audio>
+                </div>
+                ` : ''}
 
                 <div class="mission-detail-grid">
                     <div class="mission-detail">

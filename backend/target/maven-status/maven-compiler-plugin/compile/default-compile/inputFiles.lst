@@ -1,6 +1,8 @@
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\repository\RescueTeamRepository.java
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\controller\TeamController.java
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\config\DataInitializer.java
+C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\service\FileStorageService.java
+C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\config\WebConfig.java
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\repository\UserRepository.java
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\RescueManagementApplication.java
 C:\Users\User\Desktop\rescue management system\backend\src\main\java\com\rescue\management\service\TeamService.java
