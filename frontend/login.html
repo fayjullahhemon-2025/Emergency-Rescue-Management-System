@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Login to the Rescue Management System — Access emergency reporting, admin dashboard, or rescue team portal.">
     <title>Login — Rescue Management System</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>">
 </head>
 <body class="no-nav">
+
     <div class="login-page">
         <div class="login-container">
             <div class="login-card glass-card">
@@ -17,6 +18,8 @@
                     <h1>Welcome Back</h1>
                     <p>Sign in to access the rescue command center</p>
                 </div>
+
+                <!-- Role Selector -->
                 <div class="role-selector" id="role-selector">
                     <div class="role-option active" data-role="ADMIN" id="role-admin">
                         <div class="role-icon">👨‍✈️</div>
@@ -31,25 +34,36 @@
                         <div class="role-name">Rescue</div>
                     </div>
                 </div>
+
+                <!-- Error Message -->
                 <div class="login-error" id="login-error">
                     <span>⚠️</span>
                     <span id="error-message">Invalid credentials</span>
                 </div>
+
+                <!-- Login Form -->
                 <form id="login-form" autocomplete="off">
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
                         <input type="email" id="email" class="form-input" placeholder="Enter your email" required value="admin@rescue.gov">
                     </div>
+
                     <div class="form-group">
                         <label class="form-label" for="password">Password</label>
                         <input type="password" id="password" class="form-input" placeholder="Enter your password" required value="admin123">
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="btn-login">🔐 Sign In</button>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="btn-login">
+                        🔐 Sign In
+                    </button>
                 </form>
+
                 <div class="login-footer">
                     <p>Don't have an account? <a href="#" id="register-link">Register here</a></p>
-                    <p class="mt-2"><a href="index.html">← Back to Home</a></p>
+                    <p class="mt-2"><a href="/">← Back to Home</a></p>
                 </div>
+
+                <!-- Demo Credentials -->
                 <div style="margin-top: 24px; padding: 16px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
                     <p style="font-size: 0.75rem; color: var(--blue); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Demo Credentials</p>
                     <div style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
@@ -61,6 +75,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Register Modal -->
     <div class="modal-overlay" id="register-modal">
         <div class="modal">
             <div class="modal-header">
@@ -90,47 +106,117 @@
             </div>
         </div>
     </div>
-    <script src="js/api.js"></script>
+
+    <script src="/js/api.js"></script>
     <script>
+        // ── Role Selection ──
         let selectedRole = 'ADMIN';
         const roleOptions = document.querySelectorAll('.role-option');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+
         const demoCreds = {
             ADMIN: { email: 'admin@rescue.gov', password: 'admin123' },
             CITIZEN: { email: 'john@email.com', password: 'user123' },
             RESCUE_TEAM: { email: 'alpha@rescue.gov', password: 'team123' },
         };
+
         roleOptions.forEach(opt => {
             opt.addEventListener('click', () => {
                 roleOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
                 selectedRole = opt.dataset.role;
+
+                // Auto-fill demo credentials
                 const creds = demoCreds[selectedRole];
-                if (creds) { emailInput.value = creds.email; passwordInput.value = creds.password; }
+                if (creds) {
+                    emailInput.value = creds.email;
+                    passwordInput.value = creds.password;
+                }
             });
         });
+
+        // ── Login Form ──
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorEl = document.getElementById('login-error');
+            const errorMsg = document.getElementById('error-message');
             errorEl.classList.remove('show');
-            const email = emailInput.value.trim(), password = passwordInput.value.trim();
-            if (!email || !password) { document.getElementById('error-message').textContent = 'Please enter email and password'; errorEl.classList.add('show'); return; }
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                errorMsg.textContent = 'Please enter email and password';
+                errorEl.classList.add('show');
+                return;
+            }
+
             try {
                 const user = await api.users.login(email, password);
                 session.save(user);
-                const routes = { ADMIN: 'admin.html', CITIZEN: 'report.html', RESCUE_TEAM: 'rescue.html' };
-                window.location.href = routes[user.role] || 'report.html';
-            } catch (err) { document.getElementById('error-message').textContent = 'Invalid email or password.'; errorEl.classList.add('show'); }
+
+                // Route based on role
+                const routes = {
+                    ADMIN: '/admin.html',
+                    CITIZEN: '/report.html',
+                    RESCUE_TEAM: '/rescue.html'
+                };
+
+                window.location.href = routes[user.role] || '/report.html';
+            } catch (err) {
+                errorMsg.textContent = 'Invalid email or password. Please try again.';
+                errorEl.classList.add('show');
+            }
         });
-        document.getElementById('register-link').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('register-modal').classList.add('active'); });
-        document.getElementById('close-register').addEventListener('click', () => { document.getElementById('register-modal').classList.remove('active'); });
-        document.getElementById('register-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('active'); });
+
+        // ── Register Modal ──
+        document.getElementById('register-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('register-modal').classList.add('active');
+        });
+
+        document.getElementById('close-register').addEventListener('click', () => {
+            document.getElementById('register-modal').classList.remove('active');
+        });
+
+        document.getElementById('register-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                e.currentTarget.classList.remove('active');
+            }
+        });
+
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = { name: document.getElementById('reg-name').value.trim(), email: document.getElementById('reg-email').value.trim(), password: document.getElementById('reg-password').value.trim(), contact: document.getElementById('reg-contact').value.trim(), role: 'CITIZEN' };
-            try { await api.users.register(data); toast.success('Account created! You can now log in.'); document.getElementById('register-modal').classList.remove('active'); emailInput.value = data.email; passwordInput.value = data.password; } catch (err) { toast.error('Registration failed. Email may be in use.'); }
+            const data = {
+                name: document.getElementById('reg-name').value.trim(),
+                email: document.getElementById('reg-email').value.trim(),
+                password: document.getElementById('reg-password').value.trim(),
+                contact: document.getElementById('reg-contact').value.trim(),
+                role: 'CITIZEN'
+            };
+
+            try {
+                await api.users.register(data);
+                toast.success('Account created successfully! You can now log in.');
+                document.getElementById('register-modal').classList.remove('active');
+                emailInput.value = data.email;
+                passwordInput.value = data.password;
+            } catch (err) {
+                toast.error('Registration failed. Email may already be in use.');
+            }
         });
+
+        // ── Redirect if already logged in ──
+        if (session.isLoggedIn()) {
+            const user = session.get();
+            const routes = {
+                ADMIN: '/admin.html',
+                CITIZEN: '/report.html',
+                RESCUE_TEAM: '/rescue.html'
+            };
+            window.location.href = routes[user.role] || '/report.html';
+        }
     </script>
 </body>
 </html>

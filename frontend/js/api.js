@@ -84,6 +84,21 @@ const api = {
         getByRole(role) { return api.get(`/users/role/${role}`); },
         update(id, data) { return api.put(`/users/${id}`, data); },
         delete(id) { return api.delete(`/users/${id}`); },
+    },
+
+    // ── Join Request Endpoints ──
+    joinRequests: {
+        create(data) { return api.post('/join-requests', data); },
+        getByTeam(teamId) { return api.get(`/join-requests/team/${teamId}`); },
+        getByUser(userId) { return api.get(`/join-requests/user/${userId}`); },
+        updateStatus(id, status) { return api.put(`/join-requests/${id}/status`, { status }); }
+    },
+
+    // ── Team Request Endpoints ──
+    teamRequests: {
+        create(data) { return api.post('/team-requests', data); },
+        getAll() { return api.get('/team-requests'); },
+        updateStatus(id, status) { return api.put(`/team-requests/${id}/status`, { status }); }
     }
 };
 

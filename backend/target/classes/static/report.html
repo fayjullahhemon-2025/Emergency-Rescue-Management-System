@@ -52,144 +52,300 @@
                 <div class="user-role" id="user-role">Citizen</div>
             </div>
             <div class="avatar" id="user-avatar">U</div>
+            <button class="btn btn-ghost btn-sm" onclick="openProfileModal()" id="btn-edit-profile" style="margin-right: 8px; padding: 4px 8px; font-size: 0.8rem;">Profile</button>
             <button class="btn-logout" onclick="utils.logout()" id="btn-logout">Logout</button>
         </div>
     </nav>
 
     <div class="main-content">
         <div class="container">
-            <!-- Report Form -->
-            <div class="report-form-container" id="report-section">
-                <div class="page-header text-center">
-                    <h1>🚨 Report Emergency</h1>
-                    <p>Submit a disaster report for immediate rescue team dispatch. Fill in as much detail as possible.</p>
-                </div>
+            <!-- Tabs -->
+            <div class="tabs" id="report-tabs" style="margin-bottom: 24px;">
+                <button class="tab-btn active" onclick="switchReportTab('report')" id="tab-report">🚨 Report Incident</button>
+                <button class="tab-btn" onclick="switchReportTab('teams')" id="tab-teams">🚒 Rescue Units</button>
+            </div>
 
-                <div class="report-form-card glass-card">
-                    <form id="emergency-form">
-                        <div class="form-row">
+            <!-- Report Tab Content -->
+            <div id="tab-content-report" class="tab-content active">
+                <!-- Report Form -->
+                <div class="report-form-container" id="report-section">
+                    <div class="page-header text-center">
+                        <h1>🚨 Report Emergency</h1>
+                        <p>Submit a disaster report for immediate rescue team dispatch. Fill in as much detail as possible.</p>
+                    </div>
+
+                    <div class="report-form-card glass-card">
+                        <form id="emergency-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="reporter-name">Your Name (Optional)</label>
+                                    <input type="text" id="reporter-name" class="form-input" placeholder="Full name (optional)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reporter-contact">Contact Number (Optional)</label>
+                                    <input type="tel" id="reporter-contact" class="form-input" placeholder="e.g. +1-555-0000 (optional)">
+                                </div>
+                            </div>
                             <div class="form-group">
-                                <label class="form-label" for="reporter-name">Your Name (Optional)</label>
-                                <input type="text" id="reporter-name" class="form-input" placeholder="Full name (optional)">
+                                <label class="form-label" for="disaster-type">Disaster Type</label>
+                                <select id="disaster-type" class="form-select" required>
+                                    <option value="">— Select disaster type —</option>
+                                    <option value="FLOOD">🌊 Flood</option>
+                                    <option value="EARTHQUAKE">🏚️ Earthquake</option>
+                                    <option value="FIRE">🔥 Fire</option>
+                                    <option value="STORM">🌪️ Storm / Cyclone</option>
+                                    <option value="LANDSLIDE">⛰️ Landslide</option>
+                                    <option value="ACCIDENT">🚗 Accident</option>
+                                    <option value="BUILDING_COLLAPSE">🏗️ Building Collapse</option>
+                                    <option value="OTHER">⚠️ Other</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="reporter-contact">Contact Number (Optional)</label>
-                                <input type="tel" id="reporter-contact" class="form-input" placeholder="e.g. +1-555-0000 (optional)">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="disaster-type">Disaster Type</label>
-                            <select id="disaster-type" class="form-select" required>
-                                <option value="">— Select disaster type —</option>
-                                <option value="FLOOD">🌊 Flood</option>
-                                <option value="EARTHQUAKE">🏚️ Earthquake</option>
-                                <option value="FIRE">🔥 Fire</option>
-                                <option value="STORM">🌪️ Storm / Cyclone</option>
-                                <option value="LANDSLIDE">⛰️ Landslide</option>
-                                <option value="ACCIDENT">🚗 Accident</option>
-                                <option value="BUILDING_COLLAPSE">🏗️ Building Collapse</option>
-                                <option value="OTHER">⚠️ Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Severity Level</label>
-                            <div class="severity-selector" id="severity-selector">
-                                <div class="severity-option sev-low" data-severity="LOW">
-                                    <div class="sev-icon">🟢</div>
-                                    <div class="sev-label">Low</div>
-                                </div>
-                                <div class="severity-option sev-medium" data-severity="MEDIUM">
-                                    <div class="sev-icon">🟡</div>
-                                    <div class="sev-label">Medium</div>
-                                </div>
-                                <div class="severity-option sev-high active" data-severity="HIGH">
-                                    <div class="sev-icon">🟠</div>
-                                    <div class="sev-label">High</div>
-                                </div>
-                                <div class="severity-option sev-critical" data-severity="CRITICAL">
-                                    <div class="sev-icon">🔴</div>
-                                    <div class="sev-label">Critical</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <label class="form-label" for="location-address" style="margin-bottom: 0;">Location / Address</label>
-                                <div style="display: flex; gap: 8px;">
-                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-search-address" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-                                        🔍 Find on Map
-                                    </button>
-                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-detect-location" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
-                                        📍 Locate Me
-                                    </button>
-                                </div>
-                            </div>
-                            <input type="text" id="location-address" class="form-input" placeholder="Street address or landmark" required>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label class="form-label" for="location-lat">Latitude (optional)</label><input type="number" id="location-lat" class="form-input" placeholder="e.g. 23.8103" step="any"></div>
-                            <div class="form-group"><label class="form-label" for="location-lng">Longitude (optional)</label><input type="number" id="location-lng" class="form-input" placeholder="e.g. 90.4125" step="any"></div>
-                        </div>
-                        <!-- Animated Map Container -->
-                        <div id="map" style="height: 300px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.15); display: none; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);"></div>
-                        
-                        <!-- Voice Recorder Section -->
-                        <div class="form-group">
-                            <label class="form-label">Voice Report (Optional)</label>
-                            <div class="voice-recorder-card" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; margin-bottom: 20px;">
-                                <button type="button" class="btn btn-danger btn-sm" id="btn-record-audio" style="min-width: 140px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    <span class="record-dot" id="record-dot" style="width: 10px; height: 10px; background: #fff; border-radius: 50%;"></span>
-                                    <div class="soundwave-container" id="soundwave-container" style="display: none;">
-                                        <span class="soundwave-bar"></span>
-                                        <span class="soundwave-bar"></span>
-                                        <span class="soundwave-bar"></span>
-                                        <span class="soundwave-bar"></span>
-                                        <span class="soundwave-bar"></span>
+                                <label class="form-label">Severity Level</label>
+                                <div class="severity-selector" id="severity-selector">
+                                    <div class="severity-option sev-low" data-severity="LOW">
+                                        <div class="sev-icon">🟢</div>
+                                        <div class="sev-label">Low</div>
                                     </div>
-                                    <span id="record-text">Record Voice</span>
-                                </button>
-                                <div id="record-timer" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary); display: none;">00:00</div>
-                                <div id="audio-preview-container" style="display: none; align-items: center; gap: 12px; width: 100%;">
-                                    <audio id="audio-preview" controls style="height: 36px; border-radius: 8px; flex-grow: 1; background: rgba(17,24,39,0.8); border: 1px solid rgba(255,255,255,0.1);"></audio>
-                                    <button type="button" class="btn btn-ghost btn-sm" id="btn-delete-audio" style="color: var(--red);">✕ Delete</button>
+                                    <div class="severity-option sev-medium" data-severity="MEDIUM">
+                                        <div class="sev-icon">🟡</div>
+                                        <div class="sev-label">Medium</div>
+                                    </div>
+                                    <div class="severity-option sev-high active" data-severity="HIGH">
+                                        <div class="sev-icon">🟠</div>
+                                        <div class="sev-label">High</div>
+                                    </div>
+                                    <div class="severity-option sev-critical" data-severity="CRITICAL">
+                                        <div class="sev-icon">🔴</div>
+                                        <div class="sev-label">Critical</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <label class="form-label" for="location-address" style="margin-bottom: 0;">Location / Address</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-ghost btn-sm" id="btn-search-address" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                            🔍 Find on Map
+                                        </button>
+                                        <button type="button" class="btn btn-ghost btn-sm" id="btn-detect-location" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                                            📍 Locate Me
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="text" id="location-address" class="form-input" placeholder="Street address or landmark" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label" for="location-lat">Latitude (optional)</label><input type="number" id="location-lat" class="form-input" placeholder="e.g. 23.8103" step="any"></div>
+                                <div class="form-group"><label class="form-label" for="location-lng">Longitude (optional)</label><input type="number" id="location-lng" class="form-input" placeholder="e.g. 90.4125" step="any"></div>
+                            </div>
+                            <!-- Animated Map Container -->
+                            <div id="map" style="height: 300px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.15); display: none; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);"></div>
+                            
+                            <!-- Voice Recorder Section -->
+                            <div class="form-group">
+                                <label class="form-label">Voice Report (Optional)</label>
+                                <div class="voice-recorder-card" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; margin-bottom: 20px;">
+                                    <button type="button" class="btn btn-danger btn-sm" id="btn-record-audio" style="min-width: 140px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <span class="record-dot" id="record-dot" style="width: 10px; height: 10px; background: #fff; border-radius: 50%;"></span>
+                                        <div class="soundwave-container" id="soundwave-container" style="display: none;">
+                                            <span class="soundwave-bar"></span>
+                                            <span class="soundwave-bar"></span>
+                                            <span class="soundwave-bar"></span>
+                                            <span class="soundwave-bar"></span>
+                                            <span class="soundwave-bar"></span>
+                                        </div>
+                                        <span id="record-text">Record Voice</span>
+                                    </button>
+                                    <div id="record-timer" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary); display: none;">00:00</div>
+                                    <div id="audio-preview-container" style="display: none; align-items: center; gap: 12px; width: 100%;">
+                                        <audio id="audio-preview" controls style="height: 36px; border-radius: 8px; flex-grow: 1; background: rgba(17,24,39,0.8); border: 1px solid rgba(255,255,255,0.1);"></audio>
+                                        <button type="button" class="btn btn-ghost btn-sm" id="btn-delete-audio" style="color: var(--red);">✕ Delete</button>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="description">Description (Optional)</label>
-                            <textarea id="description" class="form-textarea" rows="4" placeholder="Describe the emergency situation (optional)..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;" id="btn-submit-emergency">🚨 Submit Emergency Report</button>
-                    </form>
+                            <!-- Photo Attachments Section -->
+                            <div class="form-group">
+                                <label class="form-label">Photo Attachments (Optional)</label>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <input type="file" id="report-photos" accept="image/*" multiple style="display: none;">
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('report-photos').click()" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
+                                        📷 Upload Photos
+                                    </button>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">PNG, JPG (multiple supported)</span>
+                                </div>
+                                <div class="image-preview-list" id="report-image-previews"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="description">Description (Optional)</label>
+                                <textarea id="description" class="form-textarea" rows="4" placeholder="Describe the emergency situation (optional)..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;" id="btn-submit-emergency">🚨 Submit Emergency Report</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Success Screen -->
+                <div class="success-screen" id="success-screen">
+                    <div class="success-icon">✅</div>
+                    <h2>Emergency Reported Successfully!</h2>
+                    <p>Your report has been received and is being reviewed by our command center.<br>
+                       A rescue team will be dispatched as soon as possible.</p>
+                    <div style="padding: 20px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.15); border-radius: 12px; margin-bottom: 24px; text-align: left;">
+                        <p style="font-size: 0.8rem; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Your Report Details</p>
+                        <div id="report-summary" style="font-size: 0.9rem; color: var(--text-secondary);"></div>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="resetForm()" id="btn-report-another">📝 Report Another</button>
+                        <a href="/" class="btn btn-ghost">← Back to Home</a>
+                    </div>
+                </div>
+
+                <!-- Live Emergency Feed -->
+                <div class="mt-4">
+                    <div class="section-header">
+                        <h2>📡 Live Emergency Feed</h2>
+                        <button class="btn btn-ghost btn-sm" onclick="loadFeed()" id="btn-refresh-feed">🔄 Refresh</button>
+                    </div>
+                    <div class="emergency-list" id="emergency-feed">
+                        <div class="loading-spinner"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Success Screen -->
-            <div class="success-screen" id="success-screen">
-                <div class="success-icon">✅</div>
-                <h2>Emergency Reported Successfully!</h2>
-                <p>Your report has been received and is being reviewed by our command center.<br>
-                   A rescue team will be dispatched as soon as possible.</p>
-                <div style="padding: 20px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.15); border-radius: 12px; margin-bottom: 24px; text-align: left;">
-                    <p style="font-size: 0.8rem; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Your Report Details</p>
-                    <div id="report-summary" style="font-size: 0.9rem; color: var(--text-secondary);"></div>
+            <!-- Teams Tab Content -->
+            <div id="tab-content-teams" class="tab-content">
+                <div class="section-header" style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2>🚒 Active Rescue Units</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">View rescue groups and join units, or register a new rescue squad.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openCreateTeamReqModal()" id="btn-apply-team">+ Form a Team</button>
                 </div>
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="resetForm()" id="btn-report-another">📝 Report Another</button>
-                    <a href="/" class="btn btn-ghost">← Back to Home</a>
-                </div>
-            </div>
-
-            <!-- Live Emergency Feed -->
-            <div class="mt-4">
-                <div class="section-header">
-                    <h2>📡 Live Emergency Feed</h2>
-                    <button class="btn btn-ghost btn-sm" onclick="loadFeed()" id="btn-refresh-feed">🔄 Refresh</button>
-                </div>
-                <div class="emergency-list" id="emergency-feed">
+                <div class="team-grid" id="report-team-grid" style="margin-top: 20px;">
                     <div class="loading-spinner"></div>
                 </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>👤 Edit Profile</h2>
+                <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label" for="profile-name">Full Name</label>
+                        <input type="text" id="profile-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-email">Email Address</label>
+                        <input type="email" id="profile-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-contact">Contact Number</label>
+                        <input type="tel" id="profile-contact" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-password">Password (leave blank to keep current)</label>
+                        <input type="password" id="profile-password" class="form-input" placeholder="New password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('profile-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Team Modal -->
+    <div class="modal-overlay" id="join-team-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🚒 Join Rescue Unit</h2>
+                <button class="modal-close" onclick="closeModal('join-team-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-secondary);">
+                    Apply to join <strong id="join-team-name-label"></strong>. Please provide your qualifications, training, or relevant experience (text CV).
+                </p>
+                <form id="join-team-form" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="join-team-id">
+                    <input type="hidden" id="join-team-name">
+                    <div class="form-group">
+                        <label class="form-label" for="join-cv-data">Experience & Qualifications CV</label>
+                        <textarea id="join-cv-data" class="form-textarea" rows="6" placeholder="Describe your training, certifications, and why you want to join..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('join-team-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitJoinRequest()">Submit Request</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Apply to Form Team Modal -->
+    <div class="modal-overlay" id="create-team-req-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🚒 Form New Rescue Team</h2>
+                <button class="modal-close" onclick="closeModal('create-team-req-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-secondary);">
+                    Apply to register a new rescue team. If approved by the administrator, you will be promoted to Team Leader.
+                </p>
+                <form id="create-team-req-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label" for="req-team-name">Team Name</label>
+                        <input type="text" id="req-team-name" class="form-input" placeholder="e.g. Delta Water Rescue" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="req-team-spec">Specialization</label>
+                        <select id="req-team-spec" class="form-select" required>
+                            <option value="">— Select Specialization —</option>
+                            <option value="Fire & Hazmat">Fire & Hazmat</option>
+                            <option value="Flood & Water">Flood & Water</option>
+                            <option value="Medical & Trauma">Medical & Trauma</option>
+                            <option value="Earthquake & Collapse">Earthquake & Collapse</option>
+                            <option value="Aerial & Mountain">Aerial & Mountain</option>
+                            <option value="General Rescue">General Rescue</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="req-team-contact">Contact Number</label>
+                        <input type="tel" id="req-team-contact" class="form-input" placeholder="+1-555-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="req-cv-data">Qualifications & Experience CV (Leader qualifications)</label>
+                        <textarea id="req-cv-data" class="form-textarea" rows="4" placeholder="Describe your background and leadership qualifications..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('create-team-req-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitTeamRequest()">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div class="modal-overlay" id="image-modal" style="z-index: 10000;">
+        <div class="modal" style="max-width: 80%; background: none; border: none; box-shadow: none;">
+            <div class="modal-header" style="border: none; padding: 0 0 10px 0;">
+                <button class="modal-close" onclick="closeModal('image-modal')" style="background: rgba(0,0,0,0.5); width: 36px; height: 36px; border-radius: 50%;">✕</button>
+            </div>
+            <div style="text-align: center;">
+                <img id="image-modal-img" src="" alt="Incident Photo Large" style="max-width: 100%; max-height: 80vh; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
             </div>
         </div>
     </div>
@@ -496,6 +652,42 @@
             }
         }
 
+        // ── Photo Upload Handler ──
+        let selectedPhotos = [];
+        const reportPhotosInput = document.getElementById('report-photos');
+        const reportPreviewsContainer = document.getElementById('report-image-previews');
+
+        if (reportPhotosInput) {
+            reportPhotosInput.addEventListener('change', () => {
+                const files = Array.from(reportPhotosInput.files);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        selectedPhotos.push(reader.result);
+                        renderPhotoPreviews();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                reportPhotosInput.value = ''; // Reset input to allow uploading same file
+            });
+        }
+
+        function renderPhotoPreviews() {
+            if (!reportPreviewsContainer) return;
+            reportPreviewsContainer.innerHTML = selectedPhotos.map((photo, idx) => `
+                <div class="preview-img-card">
+                    <img src="${photo}" alt="Preview">
+                    <button type="button" class="remove-btn" onclick="removePhoto(${idx})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        window.removePhoto = function(idx) {
+            selectedPhotos.splice(idx, 1);
+            renderPhotoPreviews();
+        };
+
+        // ── Submit Emergency Report ──
         document.getElementById('emergency-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = { 
@@ -505,6 +697,7 @@
                 severity: selectedSeverity, 
                 description: document.getElementById('description').value.trim() || 'Voice report submitted.', 
                 audioData: audioBase64,
+                photos: selectedPhotos,
                 location: { 
                     address: document.getElementById('location-address').value.trim(), 
                     lat: parseFloat(document.getElementById('location-lat').value) || 0, 
@@ -526,6 +719,8 @@
             document.getElementById('success-screen').classList.remove('show'); 
             document.getElementById('emergency-form').reset(); 
             selectedSeverity = 'HIGH'; 
+            selectedPhotos = [];
+            renderPhotoPreviews();
             document.querySelectorAll('.severity-option').forEach(o => o.classList.remove('active')); 
             document.querySelector('[data-severity="HIGH"]').classList.add('active'); 
             
@@ -575,6 +770,16 @@
                                     <audio src="${e.audioData}" controls style="width: 100%; height: 32px; border-radius: 6px; outline: none;"></audio>
                                 </div>
                                 ` : ''}
+
+                                ${e.photos && e.photos.length > 0 ? `
+                                <div class="photos-gallery">
+                                    ${e.photos.map(p => `
+                                        <div class="photo-thumbnail-container" onclick="openPhotoModal('${p}')" style="cursor: pointer;">
+                                            <img src="${p}" class="photo-thumbnail" alt="Incident Photo">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ` : ''}
                             </div>
                             <div class="emergency-card-meta">
                                 <div class="meta-item"><span class="icon">📍</span><span class="value">${e.location ? e.location.address : 'Unknown'}</span></div>
@@ -594,6 +799,231 @@
                 `; 
             }
         }
+
+        // ── Tab Management ──
+        window.switchReportTab = function(tabName) {
+            document.querySelectorAll('#report-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabName === 'report') {
+                document.getElementById('tab-report').classList.add('active');
+                document.getElementById('tab-content-report').classList.add('active');
+                loadFeed();
+            } else {
+                document.getElementById('tab-teams').classList.add('active');
+                document.getElementById('tab-content-teams').classList.add('active');
+                loadReportTeams();
+            }
+        };
+
+        // ── Render Active Rescue Units ──
+        async function loadReportTeams() {
+            const container = document.getElementById('report-team-grid');
+            if (!container) return;
+            container.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const teams = await api.teams.getAll();
+                const user = session.get();
+                if (teams.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🚒</div>
+                            <h3>No Rescue Units Active</h3>
+                            <p>There are currently no rescue units registered in the system.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let userRequests = [];
+                if (user) {
+                    userRequests = await api.joinRequests.getByUser(user.id);
+                }
+
+                container.innerHTML = teams.map(t => {
+                    const isMember = user && t.members && t.members.includes(user.name);
+                    const inThisTeam = user && user.teamId === t.id;
+                    const request = userRequests.find(r => r.teamId === t.id);
+
+                    let btnHtml = '';
+                    if (inThisTeam || isMember) {
+                        btnHtml = `<span class="badge badge-completed" style="background: rgba(34, 197, 94, 0.2); color: var(--green);">✓ Member</span>`;
+                    } else if (request) {
+                        const statusClass = request.status === 'PENDING' ? 'badge-pending' :
+                                            request.status === 'APPROVED' ? 'badge-completed' : 'badge-failed';
+                        btnHtml = `<span class="badge ${statusClass}">${request.status}</span>`;
+                    } else if (user) {
+                        btnHtml = `<button class="btn btn-primary btn-sm" onclick="openJoinTeamModal('${t.id}', '${t.name}')">Join Unit</button>`;
+                    } else {
+                        btnHtml = `<span class="badge badge-pending">Login to Join</span>`;
+                    }
+
+                    return `
+                        <div class="team-card glass-card" style="padding: 20px;">
+                            <div class="team-card-header" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <h3 style="margin-bottom: 4px;">${t.name}</h3>
+                                    <p class="specialization" style="font-size: 0.8rem; color: var(--text-muted);">${t.specialization}</p>
+                                </div>
+                                <span class="badge ${t.status === 'AVAILABLE' ? 'badge-available' : 'badge-on-mission'}">
+                                    <span class="badge-dot"></span> ${t.status === 'AVAILABLE' ? 'Available' : 'On Mission'}
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <strong style="font-size: 0.85rem; color: var(--text-muted);">Squad Members:</strong>
+                                <ul style="margin-top: 6px; padding-left: 18px; list-style-type: disc; color: var(--text-secondary); font-size: 0.85rem;">
+                                    ${(t.members || []).map(m => `<li>${m}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">📞 ${t.contact || 'N/A'}</span>
+                                ${btnHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚡</div>
+                        <h3>Error Loading Units</h3>
+                        <p>Could not connect to the server.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ── Modals Handling ──
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        };
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // Edit Profile
+        window.openProfileModal = function() {
+            const user = session.get();
+            if (!user) return;
+            document.getElementById('profile-name').value = user.name || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-contact').value = user.contact || '';
+            document.getElementById('profile-password').value = '';
+            document.getElementById('profile-modal').classList.add('active');
+        };
+
+        window.saveProfile = async function() {
+            const user = session.get();
+            if (!user) return;
+            const data = {
+                name: document.getElementById('profile-name').value.trim(),
+                email: document.getElementById('profile-email').value.trim(),
+                contact: document.getElementById('profile-contact').value.trim()
+            };
+            const pass = document.getElementById('profile-password').value;
+            if (pass) {
+                data.password = pass;
+            }
+            if (!data.name || !data.email) {
+                toast.warning('Name and Email are required.');
+                return;
+            }
+            try {
+                const updated = await api.users.update(user.id, data);
+                session.save(updated);
+                utils.setupNavbar(updated);
+                toast.success('Profile updated successfully!');
+                closeModal('profile-modal');
+            } catch (err) {
+                toast.error('Failed to update profile: ' + err.message);
+            }
+        };
+
+        // Join Team Request
+        window.openJoinTeamModal = function(teamId, teamName) {
+            document.getElementById('join-team-id').value = teamId;
+            document.getElementById('join-team-name').value = teamName;
+            document.getElementById('join-team-name-label').textContent = teamName;
+            document.getElementById('join-cv-data').value = '';
+            document.getElementById('join-team-modal').classList.add('active');
+        };
+
+        window.submitJoinRequest = async function() {
+            const user = session.get();
+            if (!user) {
+                toast.error('You must be logged in to apply.');
+                return;
+            }
+            const data = {
+                userId: user.id,
+                userName: user.name,
+                userEmail: user.email,
+                teamId: document.getElementById('join-team-id').value,
+                teamName: document.getElementById('join-team-name').value,
+                cvData: document.getElementById('join-cv-data').value.trim()
+            };
+            if (!data.cvData) {
+                toast.warning('Please fill in your qualifications CV details.');
+                return;
+            }
+            try {
+                await api.joinRequests.create(data);
+                toast.success('Your application to join ' + data.teamName + ' has been submitted!');
+                closeModal('join-team-modal');
+                loadReportTeams();
+            } catch (err) {
+                toast.error('Failed to submit application: ' + err.message);
+            }
+        };
+
+        // Apply to form team
+        window.openCreateTeamReqModal = function() {
+            const user = session.get();
+            if (!user) {
+                toast.error('You must be logged in to apply.');
+                return;
+            }
+            document.getElementById('create-team-req-form').reset();
+            document.getElementById('create-team-req-modal').classList.add('active');
+        };
+
+        window.submitTeamRequest = async function() {
+            const user = session.get();
+            if (!user) return;
+            const data = {
+                leaderUserId: user.id,
+                leaderName: user.name,
+                leaderEmail: user.email,
+                teamName: document.getElementById('req-team-name').value.trim(),
+                specialization: document.getElementById('req-team-spec').value,
+                contact: document.getElementById('req-team-contact').value.trim(),
+                cvData: document.getElementById('req-cv-data').value.trim()
+            };
+
+            if (!data.teamName || !data.specialization || !data.contact || !data.cvData) {
+                toast.warning('Please fill in all required fields.');
+                return;
+            }
+
+            try {
+                await api.teamRequests.create(data);
+                toast.success('Your application to form "' + data.teamName + '" has been submitted for admin approval!');
+                closeModal('create-team-req-modal');
+                loadReportTeams();
+            } catch (err) {
+                toast.error('Failed to submit application: ' + err.message);
+            }
+        };
+
+        // Photo Lightbox
+        window.openPhotoModal = function(src) {
+            document.getElementById('image-modal-img').src = src;
+            document.getElementById('image-modal').classList.add('active');
+        };
+
         setInterval(loadFeed, 30000);
     </script>
 </body>

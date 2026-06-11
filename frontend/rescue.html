@@ -50,6 +50,7 @@
                 <div class="user-role" id="user-role">RESCUE TEAM</div>
             </div>
             <div class="avatar" id="user-avatar">R</div>
+            <button class="btn btn-ghost btn-sm" onclick="openProfileModal()" id="btn-edit-profile" style="margin-right: 8px; padding: 4px 8px; font-size: 0.8rem;">Profile</button>
             <button class="btn-logout" onclick="utils.logout()" id="btn-logout">Logout</button>
         </div>
     </nav>
@@ -69,10 +70,13 @@
                             <h3 id="team-name" style="margin-bottom: 4px;">Loading...</h3>
                             <p style="color: var(--text-muted); font-size: 0.85rem;" id="team-specialization">—</p>
                         </div>
-                        <span class="badge" id="team-status-badge">
-                            <span class="badge-dot"></span>
-                            <span id="team-status-text">—</span>
-                        </span>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button class="btn btn-ghost btn-sm" onclick="openTeamEditModal()" id="btn-edit-team" style="padding: 6px 12px; font-size: 0.8rem;">⚙️ Edit Team</button>
+                            <span class="badge" id="team-status-badge">
+                                <span class="badge-dot"></span>
+                                <span id="team-status-text">—</span>
+                            </span>
+                        </div>
                     </div>
                     <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 16px;">
                         <div class="meta-item">
@@ -97,6 +101,16 @@
                     </div>
                 </div>
 
+                <!-- Recruitment / Join Requests Section -->
+                <div class="recruitment-section mt-4" id="team-recruitment-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>👥 Recruitment & Join Requests</h2>
+                    </div>
+                    <div id="join-requests-list" style="margin-top: 16px;">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
                 <!-- Mission History -->
                 <div class="mt-4">
                     <div class="section-header">
@@ -106,6 +120,93 @@
                         <div class="loading-spinner"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>👤 Edit Profile</h2>
+                <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label" for="profile-name">Full Name</label>
+                        <input type="text" id="profile-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-email">Email Address</label>
+                        <input type="email" id="profile-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-contact">Contact Number</label>
+                        <input type="tel" id="profile-contact" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-password">Password (leave blank to keep current)</label>
+                        <input type="password" id="profile-password" class="form-input" placeholder="New password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('profile-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Edit Modal -->
+    <div class="modal-overlay" id="team-edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🚒 Edit Team Information</h2>
+                <button class="modal-close" onclick="closeModal('team-edit-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="team-edit-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-team-name">Team Name</label>
+                        <input type="text" id="edit-team-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-team-spec">Specialization</label>
+                        <input type="text" id="edit-team-spec" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-team-contact">Contact Number</label>
+                        <input type="tel" id="edit-team-contact" class="form-input" required>
+                    </div>
+
+                    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; margin-top: 16px;">
+                        <label class="form-label">Manage Members</label>
+                        <div id="edit-team-members-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 12px;">
+                            <!-- Members will be listed here with remove button -->
+                        </div>
+                        <div class="inline-member-form">
+                            <input type="text" id="new-member-name" class="form-input" placeholder="Member name" style="flex: 1;">
+                            <button type="button" class="btn btn-ghost" onclick="addTeamMember()">Add Member</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('team-edit-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTeamInfo()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div class="modal-overlay" id="image-modal" style="z-index: 10000;">
+        <div class="modal" style="max-width: 80%; background: none; border: none; box-shadow: none;">
+            <div class="modal-header" style="border: none; padding: 0 0 10px 0;">
+                <button class="modal-close" onclick="closeModal('image-modal')" style="background: rgba(0,0,0,0.5); width: 36px; height: 36px; border-radius: 50%;">✕</button>
+            </div>
+            <div style="text-align: center;">
+                <img id="image-modal-img" src="" alt="Incident Photo Large" style="max-width: 100%; max-height: 80vh; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
             </div>
         </div>
     </div>
@@ -155,6 +256,8 @@
                     badge.className = 'badge badge-on-mission';
                     statusText.textContent = 'On Mission';
                 }
+
+                await loadJoinRequests();
             } catch (err) {
                 toast.error('Could not load team information');
             }
@@ -315,6 +418,16 @@
                         ${mission.description || 'No description provided'}
                     </p>
 
+                    ${mission.photos && mission.photos.length > 0 ? `
+                    <div class="photos-gallery">
+                        ${mission.photos.map(p => `
+                            <div class="photo-thumbnail-container" onclick="openPhotoModal('${p}')" style="cursor: pointer;">
+                                <img src="${p}" class="photo-thumbnail" alt="Incident Photo">
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+
                     ${isActive && mission.location && mission.location.lat && mission.location.lng ? `
                     <!-- Active Mission Map Container -->
                     <div id="active-mission-map" style="height: 250px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin: 16px 0; box-shadow: var(--glass-shadow); z-index: 1;"></div>
@@ -413,6 +526,184 @@
                 toast.error('Failed to update mission status');
             }
         }
+
+        // ── Modals Handling ──
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        };
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // Edit Profile
+        window.openProfileModal = function() {
+            const user = session.get();
+            if (!user) return;
+            document.getElementById('profile-name').value = user.name || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-contact').value = user.contact || '';
+            document.getElementById('profile-password').value = '';
+            document.getElementById('profile-modal').classList.add('active');
+        };
+
+        window.saveProfile = async function() {
+            const user = session.get();
+            if (!user) return;
+            const data = {
+                name: document.getElementById('profile-name').value.trim(),
+                email: document.getElementById('profile-email').value.trim(),
+                contact: document.getElementById('profile-contact').value.trim()
+            };
+            const pass = document.getElementById('profile-password').value;
+            if (pass) {
+                data.password = pass;
+            }
+            if (!data.name || !data.email) {
+                toast.warning('Name and Email are required.');
+                return;
+            }
+            try {
+                const updated = await api.users.update(user.id, data);
+                session.save(updated);
+                utils.setupNavbar(updated);
+                toast.success('Profile updated successfully!');
+                closeModal('profile-modal');
+            } catch (err) {
+                toast.error('Failed to update profile: ' + err.message);
+            }
+        };
+
+        // ── Team Settings & Members Administration ──
+        let editTeamMembers = [];
+
+        window.openTeamEditModal = function() {
+            if (!currentTeam) return;
+            document.getElementById('edit-team-name').value = currentTeam.name || '';
+            document.getElementById('edit-team-spec').value = currentTeam.specialization || '';
+            document.getElementById('edit-team-contact').value = currentTeam.contact || '';
+            editTeamMembers = [...(currentTeam.members || [])];
+            renderEditMembersList();
+            document.getElementById('team-edit-modal').classList.add('active');
+        };
+
+        function renderEditMembersList() {
+            const list = document.getElementById('edit-team-members-list');
+            list.innerHTML = editTeamMembers.map((m, idx) => `
+                <div class="member-list-item">
+                    <span>${m}</span>
+                    <button type="button" class="remove-member-btn" onclick="removeTeamMember(${idx})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeTeamMember = function(idx) {
+            editTeamMembers.splice(idx, 1);
+            renderEditMembersList();
+        };
+
+        window.addTeamMember = function() {
+            const input = document.getElementById('new-member-name');
+            const name = input.value.trim();
+            if (!name) {
+                toast.warning('Enter a member name first');
+                return;
+            }
+            if (editTeamMembers.includes(name)) {
+                toast.warning('Member already exists');
+                return;
+            }
+            editTeamMembers.push(name);
+            input.value = '';
+            renderEditMembersList();
+        };
+
+        window.saveTeamInfo = async function() {
+            if (!currentTeam) return;
+            const data = {
+                name: document.getElementById('edit-team-name').value.trim(),
+                specialization: document.getElementById('edit-team-spec').value.trim(),
+                contact: document.getElementById('edit-team-contact').value.trim(),
+                members: editTeamMembers
+            };
+            if (!data.name || !data.specialization || !data.contact) {
+                toast.warning('All fields are required.');
+                return;
+            }
+            try {
+                const updated = await api.teams.update(currentTeam.id, data);
+                currentTeam = updated;
+                toast.success('Team details updated successfully!');
+                closeModal('team-edit-modal');
+                await loadTeamInfo();
+            } catch (err) {
+                toast.error('Failed to update team details: ' + err.message);
+            }
+        };
+
+        // ── Recruitment & Join Requests ──
+        async function loadJoinRequests() {
+            if (!currentTeam) return;
+            const container = document.getElementById('join-requests-list');
+            const section = document.getElementById('team-recruitment-section');
+            try {
+                const requests = await api.joinRequests.getByTeam(currentTeam.id);
+                const pending = requests.filter(r => r.status === 'PENDING');
+                
+                if (requests.length > 0) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+
+                if (pending.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 20px; text-align: center; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">No pending recruitment applications at this time.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = pending.map(r => `
+                    <div class="recruitment-card" id="request-${r.id}" style="margin-bottom: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.02);">
+                        <div class="recruitment-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div>
+                                <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${r.userName}</h4>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">${r.userEmail}</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${utils.formatDateTime(r.timestamp)}</span>
+                        </div>
+                        <div class="cv-text-viewer" style="padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary); white-space: pre-wrap; margin-bottom: 12px;">${r.cvData}</div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            <button class="btn btn-ghost btn-sm" onclick="updateJoinRequestStatus('${r.id}', 'REJECTED')" style="color: var(--red); padding: 6px 12px; font-size: 0.8rem;">✕ Reject</button>
+                            <button class="btn btn-success btn-sm" onclick="updateJoinRequestStatus('${r.id}', 'APPROVED')" style="padding: 6px 12px; font-size: 0.8rem;">✓ Approve Candidate</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load join requests:', err);
+            }
+        }
+
+        window.updateJoinRequestStatus = async function(requestId, newStatus) {
+            try {
+                await api.joinRequests.updateStatus(requestId, newStatus);
+                toast.success(`Candidate request was ${newStatus.toLowerCase()}!`);
+                await loadJoinRequests();
+                await loadTeamInfo(); // reload team members list
+            } catch (err) {
+                toast.error('Failed to update request: ' + err.message);
+            }
+        };
+
+        // Photo Lightbox
+        window.openPhotoModal = function(src) {
+            document.getElementById('image-modal-img').src = src;
+            document.getElementById('image-modal').classList.add('active');
+        };
 
         // Auto-refresh every 15 seconds
         setInterval(async () => {

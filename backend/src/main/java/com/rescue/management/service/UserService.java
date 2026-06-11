@@ -42,6 +42,7 @@ public class UserService {
             if (updatedUser.getName() != null) user.setName(updatedUser.getName());
             if (updatedUser.getEmail() != null) user.setEmail(updatedUser.getEmail());
             if (updatedUser.getContact() != null) user.setContact(updatedUser.getContact());
+            if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) user.setPassword(updatedUser.getPassword());
             if (updatedUser.getRole() != null) user.setRole(updatedUser.getRole());
             if (updatedUser.getTeamId() != null) user.setTeamId(updatedUser.getTeamId());
             return userRepository.save(user);

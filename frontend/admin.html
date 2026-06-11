@@ -103,6 +103,7 @@
                 <div class="user-role" id="user-role">ADMIN</div>
             </div>
             <div class="avatar" id="user-avatar">A</div>
+            <button class="btn btn-ghost btn-sm" onclick="openProfileModal()" id="btn-edit-profile" style="margin-right: 8px; padding: 4px 8px; font-size: 0.8rem;">Profile</button>
             <button class="btn-logout" onclick="utils.logout()" id="btn-logout">Logout</button>
         </div>
     </nav>
@@ -160,6 +161,7 @@
             <div class="tabs" id="main-tabs">
                 <button class="tab-btn active" data-tab="emergencies" id="tab-emergencies">🚨 Emergencies</button>
                 <button class="tab-btn" data-tab="teams" id="tab-teams">🚒 Rescue Teams</button>
+                <button class="tab-btn" data-tab="team-requests" id="tab-team-requests">📋 Team Requests</button>
             </div>
 
             <!-- Emergencies Tab -->
@@ -215,6 +217,16 @@
                     <button class="btn btn-primary btn-sm" onclick="openCreateTeamModal()" id="btn-add-team">+ Add Team</button>
                 </div>
                 <div class="team-grid" id="team-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- Team Requests Tab -->
+            <div class="tab-content" id="content-team-requests">
+                <div class="section-header">
+                    <h2>New Team Registration Requests</h2>
+                </div>
+                <div id="team-requests-list" style="margin-top: 20px;">
                     <div class="loading-spinner"></div>
                 </div>
             </div>
@@ -306,6 +318,53 @@
         </div>
     </div>
 
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>👤 Edit Profile</h2>
+                <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label" for="profile-name">Full Name</label>
+                        <input type="text" id="profile-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-email">Email Address</label>
+                        <input type="email" id="profile-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-contact">Contact Number</label>
+                        <input type="tel" id="profile-contact" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-password">Password (leave blank to keep current)</label>
+                        <input type="password" id="profile-password" class="form-input" placeholder="New password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('profile-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div class="modal-overlay" id="image-modal" style="z-index: 10000;">
+        <div class="modal" style="max-width: 80%; background: none; border: none; box-shadow: none;">
+            <div class="modal-header" style="border: none; padding: 0 0 10px 0;">
+                <button class="modal-close" onclick="closeModal('image-modal')" style="background: rgba(0,0,0,0.5); width: 36px; height: 36px; border-radius: 50%;">✕</button>
+            </div>
+            <div style="text-align: center;">
+                <img id="image-modal-img" src="" alt="Incident Photo Large" style="max-width: 100%; max-height: 80vh; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            </div>
+        </div>
+    </div>
+
+
     <!-- Leaflet Map JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>
@@ -338,13 +397,17 @@
                     btn.classList.add('active');
                     document.getElementById(`content-${btn.dataset.tab}`).classList.add('active');
 
-                    if (btn.dataset.tab === 'teams') {
-                        loadTeams();
-                        document.getElementById('admin-map').style.display = 'none';
-                    } else {
+                    if (btn.dataset.tab === 'emergencies') {
                         document.getElementById('admin-map').style.display = 'block';
                         if (adminMap) {
                             setTimeout(() => adminMap.invalidateSize(), 100);
+                        }
+                    } else {
+                        document.getElementById('admin-map').style.display = 'none';
+                        if (btn.dataset.tab === 'teams') {
+                            loadTeams();
+                        } else if (btn.dataset.tab === 'team-requests') {
+                            loadTeamRequests();
                         }
                     }
                 });
@@ -447,7 +510,7 @@
 
         // ── Load Dashboard ──
         async function loadDashboard() {
-            await Promise.all([loadStats(), loadEmergencies(), loadTeams()]);
+            await Promise.all([loadStats(), loadEmergencies(), loadTeams(), loadTeamRequests()]);
             loadActivityFeed();
         }
 
@@ -809,6 +872,19 @@
                     ` : ''}
                 </div>
 
+                ${e.photos && e.photos.length > 0 ? `
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">🖼️ Attached Photos:</h4>
+                    <div class="photos-gallery" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                        ${e.photos.map(p => `
+                            <div class="photo-thumbnail-container" onclick="openPhotoModal('${p}')" style="cursor: pointer; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                                <img src="${p}" class="photo-thumbnail" alt="Incident Photo" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <div style="margin-top: 16px; padding: 12px; background: rgba(148, 163, 184, 0.05); border-radius: 8px;">
                     <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">
                         ID: ${e.id}
@@ -890,6 +966,144 @@
                 if (e.target === overlay) overlay.classList.remove('active');
             });
         });
+
+        // ── Load Team Requests ──
+        async function loadTeamRequests() {
+            const container = document.getElementById('team-requests-list');
+            if (!container) return;
+            container.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const requests = await api.teamRequests.getAll();
+                if (requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h3>No Team Requests</h3>
+                            <p>No registration requests have been submitted yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render requests. Sort so PENDING ones are first.
+                const sorted = [...requests].sort((a, b) => {
+                    if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+                    if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+
+                container.innerHTML = sorted.map(r => {
+                    const statusClass = r.status === 'PENDING' ? 'badge-pending' :
+                                        r.status === 'APPROVED' ? 'badge-completed' : 'badge-failed';
+                    const isPending = r.status === 'PENDING';
+
+                    return `
+                        <div class="emergency-card glass-card" style="padding: 20px; border-left: 4px solid ${isPending ? 'var(--amber)' : 'rgba(255,255,255,0.1)'};">
+                            <div class="emergency-card-header" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <h3 style="margin-bottom: 4px; font-size: 1.15rem; color: var(--text-primary); font-weight: 700;">🚒 Request to form "${r.teamName}"</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                                        Specialization: <strong style="color: var(--blue);">${r.specialization}</strong>
+                                    </p>
+                                </div>
+                                <span class="badge ${statusClass}">
+                                    <span class="badge-dot"></span> ${r.status}
+                                </span>
+                            </div>
+                            <div class="emergency-card-body" style="padding: 0;">
+                                <div style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.02); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <h4 style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 6px; font-weight: 600;">👤 Leader Candidate Details:</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 2px 0;"><strong>Name:</strong> ${r.leaderName}</p>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 2px 0;"><strong>Email:</strong> ${r.leaderEmail}</p>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 2px 0;"><strong>Contact:</strong> ${r.contact || 'N/A'}</p>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <h4 style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 6px; font-weight: 600;">📋 Qualifications & Experience CV:</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; font-style: italic; background: rgba(255,255,255,0.01); padding: 10px; border-radius: 6px; border-left: 2px solid var(--blue);">${r.cvData}</p>
+                                </div>
+                            </div>
+                            <div class="emergency-card-footer" style="padding: 12px 0 0 0; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Submitted: ${utils.formatDateTime(r.timestamp)}</span>
+                                ${isPending ? `
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-success btn-sm" onclick="updateTeamRequestStatus('${r.id}', 'APPROVED')" style="padding: 6px 12px;">Approve & Spawn Team</button>
+                                        <button class="btn btn-ghost btn-sm" onclick="updateTeamRequestStatus('${r.id}', 'REJECTED')" style="color: var(--red); padding: 6px 12px; border: 1px solid rgba(239, 68, 68, 0.2);">Reject</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚡</div>
+                        <h3>Error Loading Requests</h3>
+                        <p>Could not load team requests from server.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ── Update Team Request Status ──
+        async function updateTeamRequestStatus(id, status) {
+            const actionText = status === 'APPROVED' ? 'approve' : 'reject';
+            if (!confirm(`Are you sure you want to ${actionText} this team registration request?`)) return;
+            try {
+                await api.teamRequests.updateStatus(id, status);
+                toast.success(`Team request ${status.toLowerCase()} successfully!`);
+                await loadTeamRequests();
+                await loadStats(); // Reload count of active/pending teams
+                await loadTeams(); // Reload teams tab list
+            } catch (err) {
+                toast.error('Failed to update request: ' + err.message);
+            }
+        }
+
+        // ── Edit Profile Functions ──
+        window.openProfileModal = function() {
+            const user = session.get();
+            if (!user) return;
+            document.getElementById('profile-name').value = user.name || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-contact').value = user.contact || '';
+            document.getElementById('profile-password').value = '';
+            document.getElementById('profile-modal').classList.add('active');
+        };
+
+        window.saveProfile = async function() {
+            const user = session.get();
+            if (!user) return;
+            const data = {
+                name: document.getElementById('profile-name').value.trim(),
+                email: document.getElementById('profile-email').value.trim(),
+                contact: document.getElementById('profile-contact').value.trim()
+            };
+            const pass = document.getElementById('profile-password').value;
+            if (pass) {
+                data.password = pass;
+            }
+            if (!data.name || !data.email) {
+                toast.warning('Name and Email are required.');
+                return;
+            }
+            try {
+                const updated = await api.users.update(user.id, data);
+                session.save(updated);
+                utils.setupNavbar(updated);
+                toast.success('Profile updated successfully!');
+                closeModal('profile-modal');
+            } catch (err) {
+                toast.error('Failed to update profile: ' + err.message);
+            }
+        };
+
+        // ── Image Lightbox Modal ──
+        window.openPhotoModal = function(src) {
+            document.getElementById('image-modal-img').src = src;
+            document.getElementById('image-modal').classList.add('active');
+        };
 
         // ── Auto-refresh ──
         setInterval(loadDashboard, 20000);
