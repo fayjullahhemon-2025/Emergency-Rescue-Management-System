@@ -103,6 +103,7 @@ public class DataInitializer implements CommandLineRunner {
                 Emergency.Severity.CRITICAL,
                 "Major flooding in Riverside District. Water level rising rapidly. Multiple families trapped on rooftops. Immediate evacuation needed.",
                 null, // audioData
+                null, // photos
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(2));
 
@@ -113,6 +114,7 @@ public class DataInitializer implements CommandLineRunner {
                 Emergency.Severity.HIGH,
                 "Large fire in industrial warehouse. Thick black smoke visible. Workers may still be inside. Fire spreading to adjacent buildings.",
                 null, // audioData
+                null, // photos
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusHours(1), LocalDateTime.now().minusHours(1));
 
@@ -123,6 +125,7 @@ public class DataInitializer implements CommandLineRunner {
                 Emergency.Severity.HIGH,
                 "Building partially collapsed after tremor. At least 10 people believed trapped. Structural damage in surrounding buildings.",
                 null, // audioData
+                null, // photos
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusMinutes(45), LocalDateTime.now().minusMinutes(45));
 
@@ -133,6 +136,7 @@ public class DataInitializer implements CommandLineRunner {
                 Emergency.Severity.MEDIUM,
                 "Landslide blocking main road. Two vehicles partially buried. No confirmed injuries yet but road is completely impassable.",
                 null, // audioData
+                null, // photos
                 Emergency.Status.PENDING, null, null,
                 LocalDateTime.now().minusMinutes(30), LocalDateTime.now().minusMinutes(30));
 
