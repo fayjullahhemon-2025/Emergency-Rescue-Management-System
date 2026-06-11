@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rescue Management System — Real-time disaster rescue coordination platform for emergency reporting, team dispatch, and mission tracking.">
+    <title>Rescue Management System — Emergency Response Coordination</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>">
+</head>
+<body class="no-nav">
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="pulse-dot"></span>
+                Emergency Response Active
+            </div>
+
+            <h1 class="hero-title">
+                <span class="gradient-text">Rescue Command</span><br>
+                Management System
+            </h1>
+
+            <p class="hero-subtitle">
+                Real-time disaster rescue coordination platform. Report emergencies instantly,
+                dispatch specialized rescue teams, and track mission progress — all from one
+                unified command center.
+            </p>
+
+            <div class="hero-actions">
+                <a href="/report.html" class="btn btn-danger btn-lg" id="btn-report">
+                    🚨 Report Emergency
+                </a>
+                <a href="/login.html" class="btn btn-ghost btn-lg" id="btn-login">
+                    🔐 Access Portal
+                </a>
+            </div>
+
+            <div class="hero-stats" id="hero-stats">
+                <div class="hero-stat">
+                    <div class="number" id="stat-total">0</div>
+                    <div class="label">Total Emergencies</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number" id="stat-active">0</div>
+                    <div class="label">Active Missions</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number" id="stat-teams">0</div>
+                    <div class="label">Rescue Teams</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number" id="stat-resolved">0</div>
+                    <div class="label">Lives Saved</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="text-center mb-4" style="font-size: 2rem;">
+                Powerful Emergency Response Tools
+            </h2>
+            <p class="text-center mb-4" style="color: var(--text-muted); max-width: 600px; margin-left: auto; margin-right: auto; margin-bottom: 48px;">
+                Everything you need to coordinate disaster rescue operations efficiently and save lives faster.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">🚨</div>
+                    <h3>Instant Reporting</h3>
+                    <p>Citizens can report emergencies in seconds with location, severity, and disaster type — triggering immediate response.</p>
+                </div>
+
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">📡</div>
+                    <h3>Live Tracking</h3>
+                    <p>Monitor all active emergencies in real-time with status updates, team assignments, and progress indicators.</p>
+                </div>
+
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Smart Dispatch</h3>
+                    <p>Admins can instantly match available rescue teams to emergencies based on specialization and proximity.</p>
+                </div>
+
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Team Management</h3>
+                    <p>Organize rescue teams by specialization, track availability, and manage team members from a central hub.</p>
+                </div>
+
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Visual statistics on emergency counts, response times, team deployments, and mission completion rates.</p>
+                </div>
+
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Ready</h3>
+                    <p>Fully responsive design lets rescue workers access their mission portal from any device in the field.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 0.85rem; position: relative; z-index: 1; border-top: 1px solid var(--glass-border);">
+        <p>© 2026 Rescue Management System — Built for saving lives 🛡️</p>
+    </footer>
+
+    <script>
+        // Generate floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = [
+                'rgba(239, 68, 68, 0.3)',
+                'rgba(59, 130, 246, 0.3)',
+                'rgba(245, 158, 11, 0.3)',
+                'rgba(168, 85, 247, 0.2)',
+                'rgba(6, 182, 212, 0.2)'
+            ];
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = (Math.random() * 4 + 2) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                particle.style.animationDelay = (Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Load live stats from API
+        async function loadStats() {
+            try {
+                const stats = await fetch('/api/emergencies/stats').then(r => r.json());
+                animateNumber('stat-total', stats.total || 0);
+                animateNumber('stat-active', (stats.pending || 0) + (stats.inProgress || 0));
+                animateNumber('stat-teams', (stats.teamsAvailable || 0) + (stats.teamsOnMission || 0));
+                animateNumber('stat-resolved', (stats.completed || 0) * 12); // estimated lives saved
+            } catch (e) {
+                // Fallback demo numbers if API not available
+                animateNumber('stat-total', 47);
+                animateNumber('stat-active', 8);
+                animateNumber('stat-teams', 5);
+                animateNumber('stat-resolved', 156);
+            }
+        }
+
+        function animateNumber(id, target) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let start = 0;
+            const duration = 2000;
+            const startTime = performance.now();
+
+            function update(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target);
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        createParticles();
+        loadStats();
+    </script>
+</body>
+</html>

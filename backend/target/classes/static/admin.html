@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard — Manage emergencies, dispatch rescue teams, and monitor operations in real-time.">
+    <title>Admin Dashboard — Rescue Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">🚨</div>
+            <span>RescueCmd</span>
+        </a>
+        <ul class="navbar-links">
+            <li><a href="/admin.html" class="active" id="nav-dashboard">Dashboard</a></li>
+            <li><a href="/report.html" id="nav-report">Report</a></li>
+        </ul>
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-name" id="user-name">Admin</div>
+                <div class="user-role" id="user-role">ADMIN</div>
+            </div>
+            <div class="avatar" id="user-avatar">A</div>
+            <button class="btn-logout" onclick="utils.logout()" id="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>🛡️ Command Center</h1>
+                <p>Manage emergencies, dispatch rescue teams, and monitor all operations in real-time.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card glass-card stat-total">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Emergencies</div>
+                </div>
+                <div class="stat-card glass-card stat-pending">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card glass-card stat-active">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-value" id="stat-in-progress">0</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card glass-card stat-resolved">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="stat-completed">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card glass-card stat-teams">
+                    <div class="stat-icon">🚒</div>
+                    <div class="stat-value" id="stat-teams-available">0</div>
+                    <div class="stat-label">Teams Available</div>
+                </div>
+                <div class="stat-card glass-card stat-deployed">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="stat-teams-deployed">0</div>
+                    <div class="stat-label">Teams Deployed</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs" id="main-tabs">
+                <button class="tab-btn active" data-tab="emergencies" id="tab-emergencies">🚨 Emergencies</button>
+                <button class="tab-btn" data-tab="teams" id="tab-teams">🚒 Rescue Teams</button>
+            </div>
+
+            <!-- Emergencies Tab -->
+            <div class="tab-content active" id="content-emergencies">
+                <div class="dashboard-grid">
+                    <div class="dashboard-main">
+                        <!-- Filter Bar -->
+                        <div class="filter-bar" id="filter-bar">
+                            <button class="filter-btn active" data-filter="ALL" id="filter-all">All</button>
+                            <button class="filter-btn" data-filter="PENDING" id="filter-pending">⏳ Pending</button>
+                            <button class="filter-btn" data-filter="IN_PROGRESS" id="filter-progress">🔄 In Progress</button>
+                            <button class="filter-btn" data-filter="COMPLETED" id="filter-completed">✅ Completed</button>
+                        </div>
+
+                        <!-- Emergency List -->
+                        <div class="section-header">
+                            <h2>Emergency Reports <span class="count" id="emergency-count">0</span></h2>
+                            <button class="btn btn-ghost btn-sm" onclick="loadDashboard()" id="btn-refresh">🔄 Refresh</button>
+                        </div>
+                        <div class="emergency-list" id="emergency-list">
+                            <div class="loading-spinner"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="dashboard-sidebar">
+                        <!-- Quick Dispatch -->
+                        <div class="sidebar-section glass-card" id="sidebar-dispatch" style="display: none;">
+                            <h3>🎯 Quick Dispatch</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;" id="dispatch-emergency-info">
+                                Select an emergency to dispatch a team.
+                            </p>
+                            <div id="dispatch-team-list">
+                                <!-- Available teams will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="sidebar-section glass-card">
+                            <h3>📡 Live Feed</h3>
+                            <div id="activity-feed" style="max-height: 400px; overflow-y: auto;">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teams Tab -->
+            <div class="tab-content" id="content-teams">
+                <div class="section-header">
+                    <h2>Rescue Teams</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openCreateTeamModal()" id="btn-add-team">+ Add Team</button>
+                </div>
+                <div class="team-grid" id="team-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispatch Modal -->
+    <div class="modal-overlay" id="dispatch-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🎯 Dispatch Rescue Team</h2>
+                <button class="modal-close" onclick="closeModal('dispatch-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="dispatch-modal-info" style="margin-bottom: 20px;"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Available Team</label>
+                    <select id="dispatch-team-select" class="form-select">
+                        <option value="">— Choose a team —</option>
+                    </select>
+                </div>
+
+                <div id="selected-team-info" style="display: none; padding: 16px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px; margin-top: 12px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('dispatch-modal')">Cancel</button>
+                <button class="btn btn-primary" id="btn-confirm-dispatch" onclick="confirmDispatch()">
+                    🚀 Dispatch Team
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div class="modal-overlay" id="create-team-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🚒 Create Rescue Team</h2>
+                <button class="modal-close" onclick="closeModal('create-team-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-team-form">
+                    <div class="form-group">
+                        <label class="form-label" for="new-team-name">Team Name</label>
+                        <input type="text" id="new-team-name" class="form-input" placeholder="e.g. Foxtrot Rescue Unit" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new-team-spec">Specialization</label>
+                        <select id="new-team-spec" class="form-select" required>
+                            <option value="">— Select —</option>
+                            <option value="Fire & Hazmat">Fire & Hazmat</option>
+                            <option value="Flood & Water">Flood & Water</option>
+                            <option value="Medical & Trauma">Medical & Trauma</option>
+                            <option value="Earthquake & Collapse">Earthquake & Collapse</option>
+                            <option value="Aerial & Mountain">Aerial & Mountain</option>
+                            <option value="General Rescue">General Rescue</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new-team-contact">Contact Number</label>
+                        <input type="tel" id="new-team-contact" class="form-input" placeholder="+1-555-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new-team-members">Team Members (comma separated)</label>
+                        <textarea id="new-team-members" class="form-textarea" rows="3" placeholder="Captain John, Lt. Sarah, FF. Mike" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('create-team-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createTeam()">Create Team</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Detail Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal" style="max-width: 650px;">
+            <div class="modal-header">
+                <h2>📋 Emergency Details</h2>
+                <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+            </div>
+            <div class="modal-footer" id="detail-modal-footer">
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let currentUser = null;
+        let allEmergencies = [];
+        let allTeams = [];
+        let currentFilter = 'ALL';
+        let selectedDispatchEmergencyId = null;
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', () => {
+            currentUser = session.requireAuth(['ADMIN']);
+            if (!currentUser) return;
+
+            utils.setupNavbar(currentUser);
+            loadDashboard();
+            setupTabs();
+            setupFilters();
+        });
+
+        // ── Tabs ──
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`content-${btn.dataset.tab}`).classList.add('active');
+
+                    if (btn.dataset.tab === 'teams') loadTeams();
+                });
+            });
+        }
+
+        // ── Filters ──
+        function setupFilters() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderEmergencies();
+                });
+            });
+        }
+
+        // ── Load Dashboard ──
+        async function loadDashboard() {
+            await Promise.all([loadStats(), loadEmergencies(), loadTeams()]);
+            loadActivityFeed();
+        }
+
+        // ── Load Stats ──
+        async function loadStats() {
+            try {
+                const stats = await api.emergencies.getStats();
+                animateStat('stat-total', stats.total || 0);
+                animateStat('stat-pending', stats.pending || 0);
+                animateStat('stat-in-progress', stats.inProgress || 0);
+                animateStat('stat-completed', stats.completed || 0);
+                animateStat('stat-teams-available', stats.teamsAvailable || 0);
+                animateStat('stat-teams-deployed', stats.teamsOnMission || 0);
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        function animateStat(id, target) {
+            const el = document.getElementById(id);
+            if (el) utils.animateCounter(el, target, 1000);
+        }
+
+        // ── Load Emergencies ──
+        async function loadEmergencies() {
+            try {
+                allEmergencies = await api.emergencies.getAll();
+                renderEmergencies();
+            } catch (err) {
+                document.getElementById('emergency-list').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚡</div>
+                        <h3>Connection Error</h3>
+                        <p>Could not connect to the server.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ── Render Emergencies ──
+        function renderEmergencies() {
+            const filtered = currentFilter === 'ALL'
+                ? allEmergencies
+                : allEmergencies.filter(e => e.status === currentFilter);
+
+            document.getElementById('emergency-count').textContent = filtered.length;
+            const container = document.getElementById('emergency-list');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <h3>No Emergencies</h3>
+                        <p>No emergencies match the current filter.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(e => `
+                <div class="emergency-card glass-card severity-${(e.severity || '').toLowerCase()}" id="emergency-${e.id}">
+                    <div class="emergency-card-header">
+                        <div class="disaster-type">
+                            ${utils.disasterIcon(e.disasterType)} ${(e.disasterType || '').replace('_', ' ')}
+                        </div>
+                        <div class="emergency-card-badges">
+                            <span class="badge ${utils.severityClass(e.severity)}">
+                                <span class="badge-dot"></span> ${e.severity}
+                            </span>
+                            <span class="badge ${utils.statusClass(e.status)}">
+                                <span class="badge-dot"></span> ${utils.statusText(e.status)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="emergency-card-body">
+                        <div class="description">${e.description || ''}</div>
+                        <div class="emergency-card-meta">
+                            <div class="meta-item">
+                                <span class="icon">📍</span>
+                                <span class="value">${e.location ? e.location.address : 'Unknown'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="icon">👤</span>
+                                <span class="value">${e.reporterName || 'Anonymous'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="icon">📞</span>
+                                <span class="value">${e.reporterContact || 'N/A'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="icon">🕐</span>
+                                <span class="value timestamp">${utils.formatDateTime(e.timestamp)}</span>
+                            </div>
+                            ${e.assignedTeamName ? `
+                            <div class="meta-item">
+                                <span class="icon">🚒</span>
+                                <span class="value" style="color: var(--blue);">${e.assignedTeamName}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="emergency-card-footer">
+                        <div class="timestamp">ID: ${e.id ? e.id.substring(0, 8) : 'N/A'}...</div>
+                        <div class="emergency-card-actions">
+                            ${e.status === 'PENDING' ? `
+                                <button class="btn btn-primary btn-sm" onclick="openDispatchModal('${e.id}')">
+                                    🎯 Dispatch Team
+                                </button>
+                            ` : ''}
+                            ${e.status === 'IN_PROGRESS' ? `
+                                <button class="btn btn-success btn-sm" onclick="markComplete('${e.id}')">
+                                    ✅ Complete
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-ghost btn-sm" onclick="viewDetail('${e.id}')">
+                                📋 Details
+                            </button>
+                            <button class="btn btn-ghost btn-sm" onclick="deleteEmergency('${e.id}')" style="color: var(--red);">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Load Teams ──
+        async function loadTeams() {
+            try {
+                allTeams = await api.teams.getAll();
+                renderTeams();
+            } catch (err) {
+                console.error('Failed to load teams:', err);
+            }
+        }
+
+        // ── Render Teams ──
+        function renderTeams() {
+            const container = document.getElementById('team-grid');
+            if (allTeams.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🚒</div>
+                        <h3>No Teams</h3>
+                        <p>Create a rescue team to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allTeams.map(t => `
+                <div class="team-card glass-card" id="team-${t.id}">
+                    <div class="team-card-header">
+                        <div>
+                            <h3>${t.name}</h3>
+                            <p class="specialization">${t.specialization}</p>
+                        </div>
+                        <span class="badge ${t.status === 'AVAILABLE' ? 'badge-available' : 'badge-on-mission'}">
+                            <span class="badge-dot"></span> ${t.status === 'AVAILABLE' ? 'Available' : 'On Mission'}
+                        </span>
+                    </div>
+                    <ul class="team-members">
+                        ${(t.members || []).map(m => `<li>${m}</li>`).join('')}
+                    </ul>
+                    <div class="team-contact">
+                        📞 ${t.contact || 'N/A'}
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button class="btn btn-ghost btn-sm" onclick="deleteTeam('${t.id}')" style="color: var(--red);">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Activity Feed ──
+        function loadActivityFeed() {
+            const container = document.getElementById('activity-feed');
+            const recent = allEmergencies.slice(0, 8);
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px;">No recent activity</p>';
+                return;
+            }
+
+            container.innerHTML = recent.map(e => `
+                <div style="padding: 10px 0; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2rem;">${utils.disasterIcon(e.disasterType)}</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${(e.disasterType || '').replace('_', ' ')}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">
+                            ${e.location ? e.location.address : 'Unknown'}
+                        </div>
+                    </div>
+                    <span class="badge ${utils.statusClass(e.status)}" style="font-size: 0.65rem;">
+                        <span class="badge-dot"></span> ${utils.statusText(e.status)}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // ── Dispatch Modal ──
+        function openDispatchModal(emergencyId) {
+            selectedDispatchEmergencyId = emergencyId;
+            const emergency = allEmergencies.find(e => e.id === emergencyId);
+            if (!emergency) return;
+
+            document.getElementById('dispatch-modal-info').innerHTML = `
+                <div class="dispatch-info">
+                    <div class="info-block">
+                        <div class="info-label">Emergency</div>
+                        <div class="info-value">${utils.disasterIcon(emergency.disasterType)} ${(emergency.disasterType || '').replace('_', ' ')}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Severity</div>
+                        <div class="info-value">
+                            <span class="badge ${utils.severityClass(emergency.severity)}">
+                                <span class="badge-dot"></span> ${emergency.severity}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Location</div>
+                        <div class="info-value">${emergency.location ? emergency.location.address : 'Unknown'}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label">Reporter</div>
+                        <div class="info-value">${emergency.reporterName || 'Anonymous'}</div>
+                    </div>
+                </div>
+            `;
+
+            // Populate available teams
+            const select = document.getElementById('dispatch-team-select');
+            const available = allTeams.filter(t => t.status === 'AVAILABLE');
+            select.innerHTML = `<option value="">— Choose a team (${available.length} available) —</option>` +
+                available.map(t => `<option value="${t.id}">${t.name} — ${t.specialization}</option>`).join('');
+
+            select.onchange = () => {
+                const teamId = select.value;
+                const infoDiv = document.getElementById('selected-team-info');
+                if (teamId) {
+                    const team = allTeams.find(t => t.id === teamId);
+                    infoDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <p style="font-weight: 600; margin-bottom: 4px;">${team.name}</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">${team.specialization}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">👥 ${team.members.join(', ')}</p>
+                    `;
+                } else {
+                    infoDiv.style.display = 'none';
+                }
+            };
+
+            document.getElementById('dispatch-modal').classList.add('active');
+        }
+
+        async function confirmDispatch() {
+            const teamId = document.getElementById('dispatch-team-select').value;
+            if (!teamId) {
+                toast.warning('Please select a team to dispatch');
+                return;
+            }
+
+            try {
+                await api.emergencies.assign(selectedDispatchEmergencyId, teamId);
+                const team = allTeams.find(t => t.id === teamId);
+                toast.success(`${team.name} dispatched successfully!`);
+                closeModal('dispatch-modal');
+                await loadDashboard();
+            } catch (err) {
+                toast.error('Failed to dispatch team: ' + err.message);
+            }
+        }
+
+        // ── Mark Complete ──
+        async function markComplete(emergencyId) {
+            try {
+                await api.emergencies.updateStatus(emergencyId, 'COMPLETED');
+                toast.success('Emergency marked as completed!');
+                await loadDashboard();
+            } catch (err) {
+                toast.error('Failed to update status');
+            }
+        }
+
+        // ── View Detail ──
+        function viewDetail(emergencyId) {
+            const e = allEmergencies.find(em => em.id === emergencyId);
+            if (!e) return;
+
+            document.getElementById('detail-modal-body').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 1.5rem;">${utils.disasterIcon(e.disasterType)}</span>
+                        <h3>${(e.disasterType || '').replace('_', ' ')}</h3>
+                        <span class="badge ${utils.severityClass(e.severity)}">
+                            <span class="badge-dot"></span> ${e.severity}
+                        </span>
+                        <span class="badge ${utils.statusClass(e.status)}">
+                            <span class="badge-dot"></span> ${utils.statusText(e.status)}
+                        </span>
+                    </div>
+                </div>
+
+                <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">${e.description || 'No description'}</p>
+
+                <div class="mission-detail-grid">
+                    <div class="mission-detail">
+                        <div class="detail-label">📍 Location</div>
+                        <div class="detail-value">${e.location ? e.location.address : 'Unknown'}</div>
+                    </div>
+                    <div class="mission-detail">
+                        <div class="detail-label">🌐 Coordinates</div>
+                        <div class="detail-value" style="font-family: var(--font-mono); font-size: 0.85rem;">
+                            ${e.location ? `${e.location.lat}, ${e.location.lng}` : 'N/A'}
+                        </div>
+                    </div>
+                    <div class="mission-detail">
+                        <div class="detail-label">👤 Reporter</div>
+                        <div class="detail-value">${e.reporterName || 'Anonymous'}</div>
+                    </div>
+                    <div class="mission-detail">
+                        <div class="detail-label">📞 Contact</div>
+                        <div class="detail-value">${e.reporterContact || 'N/A'}</div>
+                    </div>
+                    <div class="mission-detail">
+                        <div class="detail-label">🕐 Reported</div>
+                        <div class="detail-value">${utils.formatDateTime(e.timestamp)}</div>
+                    </div>
+                    <div class="mission-detail">
+                        <div class="detail-label">🔄 Updated</div>
+                        <div class="detail-value">${utils.formatDateTime(e.updatedAt)}</div>
+                    </div>
+                    ${e.assignedTeamName ? `
+                    <div class="mission-detail" style="grid-column: 1 / -1;">
+                        <div class="detail-label">🚒 Assigned Team</div>
+                        <div class="detail-value" style="color: var(--blue);">${e.assignedTeamName}</div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div style="margin-top: 16px; padding: 12px; background: rgba(148, 163, 184, 0.05); border-radius: 8px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">
+                        ID: ${e.id}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detail-modal-footer').innerHTML = `
+                <button class="btn btn-ghost" onclick="closeModal('detail-modal')">Close</button>
+                ${e.status === 'PENDING' ? `<button class="btn btn-primary" onclick="closeModal('detail-modal'); openDispatchModal('${e.id}')">🎯 Dispatch</button>` : ''}
+            `;
+
+            document.getElementById('detail-modal').classList.add('active');
+        }
+
+        // ── Delete Emergency ──
+        async function deleteEmergency(id) {
+            if (!confirm('Are you sure you want to delete this emergency report?')) return;
+            try {
+                await api.emergencies.delete(id);
+                toast.success('Emergency deleted');
+                await loadDashboard();
+            } catch (err) {
+                toast.error('Failed to delete');
+            }
+        }
+
+        // ── Create Team ──
+        function openCreateTeamModal() {
+            document.getElementById('create-team-form').reset();
+            document.getElementById('create-team-modal').classList.add('active');
+        }
+
+        async function createTeam() {
+            const data = {
+                name: document.getElementById('new-team-name').value.trim(),
+                specialization: document.getElementById('new-team-spec').value,
+                contact: document.getElementById('new-team-contact').value.trim(),
+                members: document.getElementById('new-team-members').value.split(',').map(m => m.trim()).filter(m => m)
+            };
+
+            if (!data.name || !data.specialization) {
+                toast.warning('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                await api.teams.create(data);
+                toast.success(`Team "${data.name}" created successfully!`);
+                closeModal('create-team-modal');
+                await loadTeams();
+                await loadStats();
+            } catch (err) {
+                toast.error('Failed to create team');
+            }
+        }
+
+        // ── Delete Team ──
+        async function deleteTeam(id) {
+            if (!confirm('Are you sure you want to delete this team?')) return;
+            try {
+                await api.teams.delete(id);
+                toast.success('Team deleted');
+                await loadTeams();
+                await loadStats();
+            } catch (err) {
+                toast.error('Failed to delete team');
+            }
+        }
+
+        // ── Modal Helpers ──
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // ── Auto-refresh ──
+        setInterval(loadDashboard, 20000);
+    </script>
+</body>
+</html>

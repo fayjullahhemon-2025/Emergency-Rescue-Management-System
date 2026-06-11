@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rescue Team Portal — View assigned missions, update status, and track operations.">
+    <title>Rescue Team Portal — Rescue Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚒</text></svg>">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">🚨</div>
+            <span>RescueCmd</span>
+        </a>
+        <ul class="navbar-links">
+            <li><a href="/rescue.html" class="active" id="nav-missions">My Missions</a></li>
+        </ul>
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-name" id="user-name">Rescue Team</div>
+                <div class="user-role" id="user-role">RESCUE TEAM</div>
+            </div>
+            <div class="avatar" id="user-avatar">R</div>
+            <button class="btn-logout" onclick="utils.logout()" id="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="rescue-portal">
+                <div class="page-header">
+                    <h1>🚒 Rescue Team Portal</h1>
+                    <p>View and manage your assigned missions. Update status as you progress through operations.</p>
+                </div>
+
+                <!-- Team Info Card -->
+                <div class="glass-card" style="padding: 24px; margin-bottom: 24px;" id="team-info-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3 id="team-name" style="margin-bottom: 4px;">Loading...</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;" id="team-specialization">—</p>
+                        </div>
+                        <span class="badge" id="team-status-badge">
+                            <span class="badge-dot"></span>
+                            <span id="team-status-text">—</span>
+                        </span>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 16px;">
+                        <div class="meta-item">
+                            <span class="icon">👥</span>
+                            <span class="value" id="team-member-count">— members</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="icon">📞</span>
+                            <span class="value" id="team-contact">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Mission -->
+                <div id="active-mission-section">
+                    <div class="section-header">
+                        <h2>🎯 Active Mission</h2>
+                        <button class="btn btn-ghost btn-sm" onclick="loadMissions()" id="btn-refresh-missions">🔄 Refresh</button>
+                    </div>
+                    <div id="active-mission-container">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Mission History -->
+                <div class="mt-4">
+                    <div class="section-header">
+                        <h2>📋 All Assigned Missions</h2>
+                    </div>
+                    <div class="emergency-list" id="all-missions">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let currentUser = null;
+        let currentTeam = null;
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = session.requireAuth(['RESCUE_TEAM']);
+            if (!currentUser) return;
+
+            utils.setupNavbar(currentUser);
+
+            await loadTeamInfo();
+            await loadMissions();
+        });
+
+        // ── Load Team Info ──
+        async function loadTeamInfo() {
+            if (!currentUser.teamId) {
+                document.getElementById('team-name').textContent = 'No Team Assigned';
+                return;
+            }
+
+            try {
+                currentTeam = await api.teams.getById(currentUser.teamId);
+                document.getElementById('team-name').textContent = currentTeam.name;
+                document.getElementById('team-specialization').textContent = `Specialization: ${currentTeam.specialization}`;
+                document.getElementById('team-member-count').textContent = `${currentTeam.members.length} members`;
+                document.getElementById('team-contact').textContent = currentTeam.contact;
+
+                const badge = document.getElementById('team-status-badge');
+                const statusText = document.getElementById('team-status-text');
+
+                if (currentTeam.status === 'AVAILABLE') {
+                    badge.className = 'badge badge-available';
+                    statusText.textContent = 'Available';
+                } else {
+                    badge.className = 'badge badge-on-mission';
+                    statusText.textContent = 'On Mission';
+                }
+            } catch (err) {
+                toast.error('Could not load team information');
+            }
+        }
+
+        // ── Load Missions ──
+        async function loadMissions() {
+            if (!currentUser.teamId) {
+                document.getElementById('active-mission-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏔️</div>
+                        <h3>No Team Assigned</h3>
+                        <p>You are not linked to a rescue team yet. Contact your administrator.</p>
+                    </div>
+                `;
+                document.getElementById('all-missions').innerHTML = '';
+                return;
+            }
+
+            try {
+                const missions = await api.emergencies.getByTeam(currentUser.teamId);
+
+                // Active mission (IN_PROGRESS or PENDING with this team)
+                const active = missions.find(m => m.status === 'IN_PROGRESS' || m.status === 'PENDING');
+                const container = document.getElementById('active-mission-container');
+
+                if (active) {
+                    container.innerHTML = renderMissionCard(active, true);
+                } else {
+                    container.innerHTML = `
+                        <div class="glass-card" style="padding: 48px; text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.3;">✅</div>
+                            <h3 style="color: var(--text-secondary); margin-bottom: 8px;">No Active Mission</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                                You're on standby. New assignments will appear here when dispatched.
+                            </p>
+                        </div>
+                    `;
+                }
+
+                // All missions list
+                const allContainer = document.getElementById('all-missions');
+                if (missions.length === 0) {
+                    allContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h3>No Missions Yet</h3>
+                            <p>Your team hasn't been assigned any missions yet.</p>
+                        </div>
+                    `;
+                } else {
+                    allContainer.innerHTML = missions.map(m => renderMissionCard(m, false)).join('');
+                }
+            } catch (err) {
+                document.getElementById('active-mission-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚡</div>
+                        <h3>Connection Error</h3>
+                        <p>Could not load missions. Make sure the backend server is running.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ── Render Mission Card ──
+        function renderMissionCard(mission, isActive) {
+            const progressClass = mission.status === 'COMPLETED' ? 'completed' :
+                                  mission.status === 'IN_PROGRESS' ? 'in-progress' : 'pending';
+
+            return `
+                <div class="mission-card glass-card" id="mission-${mission.id}">
+                    ${isActive ? `
+                    <div class="mission-status-bar">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">PROGRESS</span>
+                        <div class="status-progress-bar">
+                            <div class="fill ${progressClass}"></div>
+                        </div>
+                        <span class="badge ${utils.statusClass(mission.status)}">
+                            <span class="badge-dot"></span> ${utils.statusText(mission.status)}
+                        </span>
+                    </div>
+                    ` : ''}
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 8px;">
+                                ${utils.disasterIcon(mission.disasterType)}
+                                ${(mission.disasterType || '').replace('_', ' ')}
+                            </h3>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <span class="badge ${utils.severityClass(mission.severity)}">
+                                <span class="badge-dot"></span> ${mission.severity}
+                            </span>
+                            ${!isActive ? `
+                            <span class="badge ${utils.statusClass(mission.status)}">
+                                <span class="badge-dot"></span> ${utils.statusText(mission.status)}
+                            </span>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px; line-height: 1.6;">
+                        ${mission.description || 'No description provided'}
+                    </p>
+
+                    <div class="mission-detail-grid">
+                        <div class="mission-detail">
+                            <div class="detail-label">📍 Location</div>
+                            <div class="detail-value">${mission.location ? mission.location.address : 'Unknown'}</div>
+                        </div>
+                        <div class="mission-detail">
+                            <div class="detail-label">👤 Reporter</div>
+                            <div class="detail-value">${mission.reporterName || 'Anonymous'}</div>
+                        </div>
+                        <div class="mission-detail">
+                            <div class="detail-label">📞 Contact</div>
+                            <div class="detail-value">${mission.reporterContact || 'N/A'}</div>
+                        </div>
+                        <div class="mission-detail">
+                            <div class="detail-label">🕐 Reported</div>
+                            <div class="detail-value">${utils.formatDateTime(mission.timestamp)}</div>
+                        </div>
+                    </div>
+
+                    ${mission.status !== 'COMPLETED' ? `
+                    <div class="mission-actions" style="margin-top: 16px;">
+                        ${mission.status === 'PENDING' ? `
+                            <button class="btn btn-warning" onclick="updateMissionStatus('${mission.id}', 'IN_PROGRESS')">
+                                ▶️ Start Mission
+                            </button>
+                        ` : ''}
+                        ${mission.status === 'IN_PROGRESS' ? `
+                            <button class="btn btn-success" onclick="updateMissionStatus('${mission.id}', 'COMPLETED')">
+                                ✅ Mark Complete
+                            </button>
+                        ` : ''}
+                    </div>
+                    ` : `
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(34, 197, 94, 0.08); border-radius: 8px; text-align: center;">
+                        <span style="color: var(--green); font-weight: 600; font-size: 0.9rem;">✅ Mission Completed</span>
+                    </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // ── Update Mission Status ──
+        async function updateMissionStatus(emergencyId, newStatus) {
+            const statusLabels = { IN_PROGRESS: 'In Progress', COMPLETED: 'Completed' };
+
+            try {
+                await api.emergencies.updateStatus(emergencyId, newStatus);
+                toast.success(`Mission status updated to ${statusLabels[newStatus]}!`);
+                await loadTeamInfo();
+                await loadMissions();
+            } catch (err) {
+                toast.error('Failed to update mission status');
+            }
+        }
+
+        // Auto-refresh every 15 seconds
+        setInterval(async () => {
+            await loadTeamInfo();
+            await loadMissions();
+        }, 15000);
+    </script>
+</body>
+</html>
